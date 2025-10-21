@@ -193,6 +193,32 @@ When the Tauri app starts:
 - **Cascading Deletes**: Deleting a routine automatically deletes all associated steps
 - **Step Ordering**: Steps have an `order` field (integer) that determines execution sequence
 
+## Release & Distribution
+
+FortiFlow uses an automated release system:
+
+**Release Process:**
+- Quick method: Run `./scripts/prepare-release.sh <version>` to automate version bumping and tagging
+- Manual method: Update versions in `tauri.conf.json`, `Cargo.toml`, `package.json`, and `docs/index.html`, then create a git tag
+- GitHub Actions automatically builds Windows MSI, Linux AppImage/DEB, and macOS DMG installers
+- Draft releases are created automatically in GitHub Releases
+- Download page hosted via GitHub Pages at `/docs/index.html`
+
+**Key Files:**
+- `.github/workflows/release.yml`: Automated multi-platform builds triggered by version tags (v*.*.*)
+- `.github/workflows/pages.yml`: Auto-deploy download page to GitHub Pages
+- `docs/index.html`: Landing page with download button
+- `RELEASE.md`: Complete release guide with troubleshooting
+- `QUICK_RELEASE.md`: Quick reference for common release tasks
+- `scripts/prepare-release.sh`: Automated script to prepare releases
+
+**Distribution:**
+- Windows: MSI installer (requires WiX Toolset for local builds)
+- Linux: AppImage (portable) and DEB package
+- macOS: DMG for both Intel and Apple Silicon
+
+See [QUICK_RELEASE.md](QUICK_RELEASE.md) for quick start or [RELEASE.md](RELEASE.md) for detailed instructions.
+
 ## Current Phase
 
 MVP (local development):
@@ -201,6 +227,8 @@ MVP (local development):
 - React frontend with routing
 - SQLite local storage
 - Tauri desktop packaging with auto-backend management
+- Automated release system with GitHub Actions
+- Download page via GitHub Pages
 - No authentication or user management yet
 
 ## Future Plans

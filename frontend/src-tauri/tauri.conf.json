@@ -40,6 +40,20 @@
     "copyright": "Copyright © 2025 Alban Teissier",
     "category": "Productivity",
     "shortDescription": "Master your flow. Map by map.",
-    "longDescription": "FortiFlow est un logiciel d'entraînement intelligent pour Fortnite, conçu pour les joueurs qui veulent s'améliorer avec méthode."
+    "longDescription": "FortiFlow est un logiciel d'entraînement intelligent pour Fortnite, conçu pour les joueurs qui veulent s'améliorer avec méthode.",
+    "windows": {
+      "certificateThumbprint": null,
+      "digestAlgorithm": "sha256",
+      "timestampUrl": "",
+      "wix": {
+        "language": "en-US",
+        "license": false,
+        "bannerPath": null,
+        "dialogImagePath": null
+      }
+    },
+    "resources": [
+      "../../backend/**/*"
+    ]
   }
 }
