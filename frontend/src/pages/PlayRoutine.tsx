@@ -88,7 +88,8 @@ export default function PlayRoutine() {
     if (!routine) return;
 
     if (currentStepIndex < routine.steps.length - 1) {
-      // Move to next step
+      // Pause automatically before next step
+      setIsPaused(true);
       const nextIndex = currentStepIndex + 1;
       setCurrentStepIndex(nextIndex);
       setTimeRemaining(routine.steps[nextIndex].duree);
@@ -109,6 +110,7 @@ export default function PlayRoutine() {
     const nextIndex = currentStepIndex + 1;
     setCurrentStepIndex(nextIndex);
     setTimeRemaining(routine.steps[nextIndex].duree);
+    setIsPaused(true); // Auto-pause on manual next
   };
 
   const formatTime = (seconds: number) => {
