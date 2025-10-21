@@ -1,4 +1,5 @@
-### Tests & Doc
-- [ ] Doc interactive `/docs`
-- [ ] Tests unitaires (`pytest`)
-- [ ] Script de lancement `run_backend.sh`
+## 💻 Frontend (React + TailwindCSS)
+- [ ] Initialiser projet React TypeScript (`vite`)
+- [ ] Installer et configurer TailwindCSS
+- [ ] Configurer `.env` (`VITE_API_URL`)
+
