@@ -1,11 +1,10 @@
 import { useEffect, useState } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
-import type { Routine, RoutineStep } from '../types';
+import { useParams, Link } from 'react-router-dom';
+import type { Routine } from '../types';
 import { api } from '../services/api';
 
 export default function PlayRoutine() {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
   const [routine, setRoutine] = useState<Routine | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -20,7 +19,7 @@ export default function PlayRoutine() {
   }, [id]);
 
   useEffect(() => {
-    let interval: NodeJS.Timeout;
+    let interval: ReturnType<typeof setInterval>;
 
     if (isRunning && !isPaused && timeRemaining > 0) {
       interval = setInterval(() => {

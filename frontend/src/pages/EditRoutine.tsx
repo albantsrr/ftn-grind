@@ -1,13 +1,16 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link, useParams } from 'react-router-dom';
-import type { RoutineCreate, RoutineStep, Routine } from '../types';
+import type { RoutineCreate, RoutineStep } from '../types';
 import { api } from '../services/api';
+
+// Using RoutineStep type for type safety
+type StepInput = Omit<RoutineStep, 'id' | 'routine_id' | 'order'>;
 
 export default function EditRoutine() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [routineName, setRoutineName] = useState('');
-  const [steps, setSteps] = useState<Omit<RoutineStep, 'id' | 'routine_id' | 'order'>[]>([]);
+  const [steps, setSteps] = useState<StepInput[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
