@@ -20,7 +20,9 @@ app.add_middleware(
         "http://localhost:5173",  # Vite dev server
         "http://127.0.0.1:5173",  # Vite dev server (alternative)
         "http://localhost:1420",  # Tauri default
+        "http://127.0.0.1:1420",  # Tauri alternative
         "tauri://localhost",      # Tauri protocol
+        "https://tauri.localhost", # Tauri HTTPS
     ],
     allow_credentials=True,
     allow_methods=["*"],

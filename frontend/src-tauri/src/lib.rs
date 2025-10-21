@@ -3,6 +3,9 @@ use std::process::{Command, Child};
 use std::sync::Mutex;
 use port_scanner::scan_port_addr;
 
+#[cfg(target_os = "windows")]
+use std::os::windows::process::CommandExt;
+
 struct BackendProcess(Mutex<Option<Child>>);
 
 fn is_port_available(port: u16) -> bool {
@@ -40,12 +43,19 @@ fn start_backend() -> Result<Child, Box<dyn std::error::Error>> {
 
     // Start the backend process
     let child = if cfg!(target_os = "windows") {
-        Command::new("cmd")
-            .args(["/C", "cd", backend_path.to_str().unwrap(), "&&",
-                   "python", "-m", "venv", "venv", "&&",
-                   "venv\\Scripts\\activate", "&&",
-                   "pip", "install", "-r", "requirements.txt", "&&",
-                   "uvicorn", "main:app", "--host", "127.0.0.1", "--port", "3000"])
+        // Windows: use PowerShell for better command handling
+        let script = format!(
+            "cd '{}'; \
+            if (!(Test-Path 'venv')) {{ python -m venv venv }}; \
+            .\\venv\\Scripts\\Activate.ps1; \
+            pip install -q -r requirements.txt; \
+            uvicorn main:app --host 127.0.0.1 --port 3000",
+            backend_path.display()
+        );
+
+        Command::new("powershell")
+            .args(["-NoProfile", "-Command", &script])
+            .creation_flags(0x08000000) // CREATE_NO_WINDOW
             .spawn()?
     } else {
         Command::new("sh")
