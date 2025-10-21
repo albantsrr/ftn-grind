@@ -6,31 +6,31 @@
 - [X] Créer `requirements.txt` (`fastapi`, `uvicorn`, `sqlalchemy`, `pydantic`)
 
 ### Database
-- [ ] Créer `database.py` (connexion SQLite, `SessionLocal`)
-- [ ] Créer `models.py` :
-  - [ ] Modèle `Routine` (id, nom, date)
-  - [ ] Modèle `RoutineStep` (id, routine_id, nom, code_map, durée, tips)
-- [ ] Exécuter `Base.metadata.create_all`
+- [X] Créer `database.py` (connexion SQLite, `SessionLocal`)
+- [X] Créer `models.py` :
+  - [X] Modèle `Routine` (id, nom, date)
+  - [X] Modèle `RoutineStep` (id, routine_id, nom, code_map, durée, tips)
+- [X] Exécuter `Base.metadata.create_all`
 
 ### API CRUD
-- [ ] Créer `routers/routines.py`
-  - [ ] `GET /routines`
-  - [ ] `GET /routines/{id}`
-  - [ ] `POST /routines`
-  - [ ] `PUT /routines/{id}`
-  - [ ] `DELETE /routines/{id}`
-  - [ ] Gestion erreurs (404, 422)
+- [X] Créer `routers/routines.py`
+  - [X] `GET /routines`
+  - [X] `GET /routines/{id}`
+  - [X] `POST /routines`
+  - [X] `PUT /routines/{id}`
+  - [X] `DELETE /routines/{id}`
+  - [X] Gestion erreurs (404, 422)
 
 ### Timer
-- [ ] Créer `routers/timer.py`
-  - [ ] Endpoint `POST /start-routine/{id}`
-  - [ ] Séquencer les étapes avec `asyncio.sleep()`
-  - [ ] Log du timer et retour JSON au frontend
+- [X] Créer `routers/timer.py`
+  - [X] Endpoint `POST /start-routine/{id}`
+  - [X] Séquencer les étapes avec `asyncio.sleep()`
+  - [X] Log du timer et retour JSON au frontend
 
 ### Tests & Doc
-- [ ] Doc interactive `/docs`
-- [ ] Tests unitaires (`pytest`)
-- [ ] Script de lancement `run_backend.sh`
+- [X] Doc interactive `/docs`
+- [X] Tests unitaires (`pytest`)
+- [X] Script de lancement `run_backend.sh`
 
 ---
 
