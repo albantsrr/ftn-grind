@@ -31,12 +31,12 @@ echo "Tables will be created automatically on first run"
 echo "🚀 Starting FortiFlow API..."
 echo ""
 echo "API will be available at:"
-echo "  - Main:        http://localhost:8000"
-echo "  - Docs:        http://localhost:8000/docs"
-echo "  - ReDoc:       http://localhost:8000/redoc"
-echo "  - Health:      http://localhost:8000/health"
+echo "  - Main:        http://localhost:8001"
+echo "  - Docs:        http://localhost:8001/docs"
+echo "  - ReDoc:       http://localhost:8001/redoc"
+echo "  - Health:      http://localhost:8001/health"
 echo ""
 echo "Press CTRL+C to stop the server"
 echo ""
 
-uvicorn main:app --reload --host 0.0.0.0 --port 8000
+uvicorn main:app --reload --host 0.0.0.0 --port 8001

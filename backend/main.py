@@ -18,6 +18,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:5173",  # Vite dev server
+        "http://127.0.0.1:5173",  # Vite dev server (alternative)
         "http://localhost:1420",  # Tauri default
         "tauri://localhost",      # Tauri protocol
     ],

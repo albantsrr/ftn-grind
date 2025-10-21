@@ -1,5 +1,7 @@
-## 💻 Frontend (React + TailwindCSS)
-- [ ] Initialiser projet React TypeScript (`vite`)
-- [ ] Installer et configurer TailwindCSS
-- [ ] Configurer `.env` (`VITE_API_URL`)
 
+### Navigation
+- [ ] Ajouter `react-router-dom`
+- [ ] Pages :
+  - [ ] `/` : liste des routines
+  - [ ] `/create` : création
+  - [ ] `/play/:id` : exécution

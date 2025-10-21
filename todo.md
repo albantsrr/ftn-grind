@@ -40,11 +40,11 @@
 - [X] Configurer `.env` (`VITE_API_URL`)
 
 ### Navigation
-- [ ] Ajouter `react-router-dom`
-- [ ] Pages :
-  - [ ] `/` : liste des routines
-  - [ ] `/create` : création
-  - [ ] `/play/:id` : exécution
+-[X] Ajouter `react-router-dom`
+- [X] Pages :
+  - [X] `/` : liste des routines
+  - [X] `/create` : création
+  - [X] `/play/:id` : exécution
 
 ### RoutineForm.tsx
 - [ ] Formulaire routine :
