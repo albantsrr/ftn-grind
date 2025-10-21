@@ -42,7 +42,8 @@ fn start_backend() -> Result<Child, Box<dyn std::error::Error>> {
     log::info!("Backend path: {:?}", backend_path);
 
     // Start the backend process
-    let child = if cfg!(target_os = "windows") {
+    #[cfg(target_os = "windows")]
+    let child = {
         // Windows: use PowerShell for better command handling
         let script = format!(
             "cd '{}'; \
@@ -57,7 +58,10 @@ fn start_backend() -> Result<Child, Box<dyn std::error::Error>> {
             .args(["-NoProfile", "-Command", &script])
             .creation_flags(0x08000000) // CREATE_NO_WINDOW
             .spawn()?
-    } else {
+    };
+
+    #[cfg(not(target_os = "windows"))]
+    let child = {
         Command::new("sh")
             .arg("-c")
             .arg(format!(
