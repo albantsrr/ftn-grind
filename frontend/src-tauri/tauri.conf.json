@@ -44,13 +44,7 @@
     "windows": {
       "certificateThumbprint": null,
       "digestAlgorithm": "sha256",
-      "timestampUrl": "",
-      "wix": {
-        "language": "en-US",
-        "license": false,
-        "bannerPath": null,
-        "dialogImagePath": null
-      }
+      "timestampUrl": ""
     },
     "resources": [
       "../../backend/**/*"
