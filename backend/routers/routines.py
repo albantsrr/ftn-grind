@@ -53,7 +53,8 @@ def create_routine(routine_data: RoutineCreate, db: Session = Depends(get_db)):
     new_routine = Routine(
         nom=routine_data.nom,
         sound_type=routine_data.sound_type,
-        volume=routine_data.volume
+        volume=routine_data.volume,
+        image_url=routine_data.image_url
     )
     db.add(new_routine)
     db.flush()  # Get the routine ID before committing
@@ -105,6 +106,8 @@ def update_routine(
         routine.sound_type = routine_data.sound_type
     if routine_data.volume is not None:
         routine.volume = routine_data.volume
+    if routine_data.image_url is not None:
+        routine.image_url = routine_data.image_url
 
     # Update steps if provided
     if routine_data.steps is not None:
