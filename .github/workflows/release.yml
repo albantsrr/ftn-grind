@@ -65,6 +65,8 @@ jobs:
       - name: Copy backend to Tauri resources
         shell: bash
         run: |
+          # Clean and recreate backend directory (remove .gitkeep)
+          rm -rf frontend/src-tauri/backend
           mkdir -p frontend/src-tauri/backend
           # Copy only necessary backend files, exclude venv, __pycache__, and .db
           cp backend/*.py frontend/src-tauri/backend/ 2>/dev/null || true

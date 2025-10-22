@@ -46,8 +46,8 @@
       "digestAlgorithm": "sha256",
       "timestampUrl": ""
     },
-    "resources": {
-      "backend/**": "backend"
-    }
+    "resources": [
+      "backend"
+    ]
   }
 }

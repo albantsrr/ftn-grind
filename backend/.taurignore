@@ -1,11 +1,26 @@
+# Python virtual environment
 venv/
+env/
+
+# Python cache
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
 .pytest_cache/
+
+# Database files
 *.db
 *.db-journal
+
+# Environment and config
 .env
+
+# Test files
 test*.py
 tests/
+
+# Git files
+.git
+.gitignore
+.gitkeep
