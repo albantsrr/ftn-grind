@@ -72,6 +72,13 @@ fn start_backend<R: tauri::Runtime>(app: &tauri::AppHandle<R>) -> Result<Child, 
     // Start the backend process
     #[cfg(target_os = "windows")]
     let child = {
+        // Convert path to normal Windows format (remove \\?\ prefix if present)
+        let backend_path_str = backend_path.to_str()
+            .ok_or("Backend path contains invalid UTF-8")?
+            .strip_prefix(r"\\?\").unwrap_or(backend_path.to_str().unwrap());
+
+        log::info!("Normalized backend path for PowerShell: {}", backend_path_str);
+
         // Windows: use PowerShell for better command handling
         let script = format!(
             "cd '{}'; \
@@ -86,7 +93,7 @@ fn start_backend<R: tauri::Runtime>(app: &tauri::AppHandle<R>) -> Result<Child, 
             pip install -q -r requirements.txt; \
             Write-Output 'Starting uvicorn...'; \
             uvicorn main:app --host 127.0.0.1 --port 3000",
-            backend_path.display()
+            backend_path_str
         );
 
         log::info!("Executing PowerShell script: {}", script);
