@@ -1,34 +1,36 @@
-# FortiFlow Download Page
+# 📚 FortiFlow Documentation
 
-This directory contains the GitHub Pages site for FortiFlow downloads.
+This directory contains all FortiFlow documentation, organized by topic.
 
-## Accessing the page
+## 📂 Structure
 
-Once GitHub Pages is configured, the site will be available at:
 ```
-https://<your-username>.github.io/ftn-grind/
+docs/
+├── index.html           # GitHub Pages download page
+├── setup/               # Installation and setup guides
+│   └── TAURI_SETUP.md  # Complete Tauri installation guide
+└── release/             # Release and distribution
+    ├── RELEASE.md       # Complete release guide with troubleshooting
+    └── QUICK_RELEASE.md # Quick reference for releases
 ```
 
-## Updating the download page
+## 🚀 Quick Links
 
-To update the download page for a new release:
+### For Users
+- **[Download Page](https://albantsrr.github.io/ftn-grind/)** - Get the latest version
 
-1. Edit `index.html`
-2. Update the version number in the download link (line ~119)
-3. Update the displayed version number (line ~127)
-4. Commit and push:
-   ```bash
-   git add docs/index.html
-   git commit -m "docs: update download page for vX.X.X"
-   git push
-   ```
+### For Developers
+- **[Setup Guide](setup/TAURI_SETUP.md)** - Install dependencies and run the app
+- **[Quick Release](release/QUICK_RELEASE.md)** - Create a new release in minutes
+- **[Complete Release Guide](release/RELEASE.md)** - Detailed release process with troubleshooting
 
-The page will be automatically updated within 1-2 minutes.
+### For Claude Code
+- **[CLAUDE.md](../CLAUDE.md)** - Project architecture and development guide
 
-## Customization
+## 🌐 GitHub Pages
 
-The page is a single HTML file with embedded CSS and minimal JavaScript. You can customize:
-- Colors and gradients in the `<style>` section
-- Features list in the `.features` section
-- Download buttons and links
-- Platform detection logic in the `<script>` section
+The download page (`index.html`) is automatically deployed via GitHub Pages.
+
+**URL:** `https://<your-username>.github.io/ftn-grind/`
+
+To update for a new release, the version is automatically updated by the `scripts/prepare-release.sh` script.

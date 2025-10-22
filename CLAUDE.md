@@ -81,7 +81,7 @@ npm run tauri:build
 
 Desktop app executable location after build: `frontend/src-tauri/target/release/bundle/`
 
-For detailed Tauri setup instructions, see [TAURI_SETUP.md](TAURI_SETUP.md)
+For detailed Tauri setup instructions, see [docs/setup/TAURI_SETUP.md](docs/setup/TAURI_SETUP.md)
 
 ## Architecture
 
@@ -111,11 +111,7 @@ The backend uses FastAPI with SQLAlchemy ORM following a modular router pattern:
 - Relationship: One routine has many steps with cascade delete
 
 **CORS Configuration:**
-The backend allows requests from:
-- `http://localhost:5173` (Vite dev server)
-- `http://127.0.0.1:5173` (Vite alternative)
-- `http://localhost:1420` (Tauri default)
-- `tauri://localhost` (Tauri protocol)
+The backend allows requests from all origins (`allow_origins=["*"]`) since the API is localhost-only and doesn't expose sensitive data. This simplifies development across Vite dev server, Tauri's custom protocols, and different local ports.
 
 ### Frontend Structure
 
@@ -186,7 +182,7 @@ When the Tauri app starts:
 
 - **Backend Language**: Uses French field names in database (nom, duree) while documentation is mixed French/English
 - **Tauri Auto-Backend**: The desktop app automatically starts/stops the FastAPI backend; no manual backend launch needed
-- **Rust Required**: Tauri requires Rust toolchain for compilation (see TAURI_SETUP.md)
+- **Rust Required**: Tauri requires Rust toolchain for compilation (see docs/setup/TAURI_SETUP.md)
 - **Timer Implementation**: Backend timer uses asyncio for step sequencing, but frontend should implement client-side timer for responsiveness
 - **Testing**: Backend has pytest configuration with async mode enabled
 - **Field Naming**: Be consistent with existing naming conventions (nom, code_map, duree, tips)
@@ -208,8 +204,8 @@ FortiFlow uses an automated release system:
 - `.github/workflows/release.yml`: Automated multi-platform builds triggered by version tags (v*.*.*)
 - `.github/workflows/pages.yml`: Auto-deploy download page to GitHub Pages
 - `docs/index.html`: Landing page with download button
-- `RELEASE.md`: Complete release guide with troubleshooting
-- `QUICK_RELEASE.md`: Quick reference for common release tasks
+- `docs/release/RELEASE.md`: Complete release guide with troubleshooting
+- `docs/release/QUICK_RELEASE.md`: Quick reference for common release tasks
 - `scripts/prepare-release.sh`: Automated script to prepare releases
 
 **Distribution:**
@@ -217,7 +213,7 @@ FortiFlow uses an automated release system:
 - Linux: AppImage (portable) and DEB package
 - macOS: DMG for both Intel and Apple Silicon
 
-See [QUICK_RELEASE.md](QUICK_RELEASE.md) for quick start or [RELEASE.md](RELEASE.md) for detailed instructions.
+See [docs/release/QUICK_RELEASE.md](docs/release/QUICK_RELEASE.md) for quick start or [docs/release/RELEASE.md](docs/release/RELEASE.md) for detailed instructions.
 
 ## Current Phase
 

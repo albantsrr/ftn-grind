@@ -63,30 +63,43 @@ Créer un **logiciel desktop installable (Windows/macOS/Linux)**, moderne et év
 ## 📂 Structure du projet
 
 ```bash
-fortiflow/
-├── backend/
-│   ├── main.py                # API FastAPI
-│   ├── models.py              # Modèles Pydantic et ORM
-│   ├── database.py            # Connexion SQLite
+ftn-grind/
+├── backend/                   # API FastAPI
+│   ├── main.py               # App initialization, CORS, routes
+│   ├── models.py             # ORM & Pydantic models
+│   ├── database.py           # SQLite connection
 │   ├── routers/
-│   │   ├── routines.py        # CRUD routines
-│   │   └── timer.py           # Gestion du timer
-│   └── requirements.txt
+│   │   ├── routines.py       # CRUD endpoints
+│   │   └── timer.py          # Timer execution
+│   ├── tests/                # pytest test suites
+│   ├── requirements.txt
+│   └── run_backend.sh        # Launch script
 │
-├── frontend/
+├── frontend/                  # React + Vite
 │   ├── src/
-│   │   ├── App.tsx
-│   │   ├── components/
-│   │   │   ├── RoutineForm.tsx
-│   │   │   ├── RoutinePlayer.tsx
-│   │   │   └── TimerDisplay.tsx
+│   │   ├── App.tsx           # Router config
+│   │   ├── pages/            # Page components
+│   │   ├── services/         # API client
+│   │   └── types/            # TypeScript interfaces
+│   ├── src-tauri/            # Tauri desktop app
+│   │   ├── src/lib.rs        # Backend auto-start logic
+│   │   └── tauri.conf.json   # App configuration
 │   └── package.json
 │
-├── src-tauri/
-│   ├── tauri.conf.json        # Config app desktop
-│   └── Cargo.toml
+├── docs/                      # Documentation
+│   ├── index.html            # Download page (GitHub Pages)
+│   ├── setup/                # Installation guides
+│   └── release/              # Release documentation
 │
-└── README.md
+├── scripts/                   # Automation scripts
+│   └── prepare-release.sh    # Release automation
+│
+├── .github/workflows/         # CI/CD
+│   ├── release.yml           # Multi-platform builds
+│   └── pages.yml             # GitHub Pages deploy
+│
+├── CLAUDE.md                  # Developer documentation
+└── README.md                  # This file
 ```
 
 ---
@@ -212,8 +225,17 @@ Développé par **Alban Teissier**
 
 ---
 
+## 📚 Documentation
+
+- **[CLAUDE.md](CLAUDE.md)** - Architecture technique et guide de développement
+- **[docs/setup/TAURI_SETUP.md](docs/setup/TAURI_SETUP.md)** - Guide d'installation complet
+- **[docs/release/QUICK_RELEASE.md](docs/release/QUICK_RELEASE.md)** - Création rapide de releases
+- **[docs/release/RELEASE.md](docs/release/RELEASE.md)** - Guide complet de release avec troubleshooting
+
+---
+
 ## 💬 Contact
 
-📧 **alban.teissier.dev@gmail.com**  
-🌐 [LinkedIn](https://www.linkedin.com/in/albanteissier/)  
+📧 **alban.teissier.dev@gmail.com**
+🌐 [LinkedIn](https://www.linkedin.com/in/albanteissier/)
 🕹️ *FortiFlow – Master your flow. Map by map.*
