@@ -6,7 +6,7 @@ Il permet de **créer, enregistrer et exécuter** des routines d’entraînement
 
 L’objectif : transformer les sessions d’échauffement en une expérience fluide, mesurable et motivante.
 
----
+---a
 
 ## 🎯 Objectif produit
 
