@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from contextlib import asynccontextmanager
 from routers import routines, timer
 from database import engine, Base
 import models
@@ -17,10 +18,22 @@ logger.info("Creating database tables...")
 Base.metadata.create_all(bind=engine)
 logger.info("Database initialized successfully")
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup
+    logger.info("=" * 50)
+    logger.info("FortiFlow API v1.0.0 started successfully")
+    logger.info("API running on http://127.0.0.1:3000")
+    logger.info("API docs available at http://127.0.0.1:3000/docs")
+    logger.info("=" * 50)
+    yield
+    # Shutdown (if needed)
+
 app = FastAPI(
     title="FortiFlow API",
     description="API for managing Fortnite training routines",
-    version="1.0.0"
+    version="1.0.0",
+    lifespan=lifespan
 )
 
 # Configure CORS for local development and Tauri
@@ -51,12 +64,3 @@ async def root():
 async def health_check():
     logger.info("Health check endpoint accessed")
     return {"status": "healthy"}
-
-# Log startup
-@app.on_event("startup")
-async def startup_event():
-    logger.info("=" * 50)
-    logger.info("FortiFlow API v1.0.0 started successfully")
-    logger.info("API running on http://127.0.0.1:3000")
-    logger.info("API docs available at http://127.0.0.1:3000/docs")
-    logger.info("=" * 50)

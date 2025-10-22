@@ -9,10 +9,12 @@ FortiFlow is an intelligent training software for Fortnite players designed to h
 ## Technical Stack
 
 - **Frontend**: React 19 + TypeScript + Vite + TailwindCSS + React Router
-- **Backend**: FastAPI (Python 3.12) with SQLAlchemy ORM
+- **Backend**: FastAPI with SQLAlchemy ORM (Python 3.10-3.12 required, **NOT 3.13**)
 - **Database**: SQLite (local file: `backend/fortiflow.db`)
 - **Desktop**: Tauri v2 (Rust) for native desktop packaging
 - **Testing**: pytest with async support
+
+**IMPORTANT:** Python 3.13 is NOT supported. Use Python 3.10, 3.11, or 3.12 only. See [backend/PYTHON_VERSION.md](backend/PYTHON_VERSION.md) for details.
 
 ## Development Commands
 
@@ -20,17 +22,31 @@ FortiFlow is an intelligent training software for Fortnite players designed to h
 ```bash
 cd backend
 
+# Check Python version first (must be 3.10-3.12, NOT 3.13)
+python --version
+
 # Using the provided launcher script (recommended)
 ./run_backend.sh
 
 # Manual setup
 python3 -m venv venv
 source venv/bin/activate  # Windows: venv\Scripts\activate
+pip install --upgrade pip
 pip install -r requirements.txt
 uvicorn main:app --reload --host 127.0.0.1 --port 3000
 
-# Run tests
+# Run all tests
 pytest
+
+# Run specific test file
+pytest tests/test_routines.py
+pytest tests/test_timer.py
+
+# Run tests with verbose output
+pytest -v
+
+# Run with coverage
+pytest --cov
 ```
 
 Backend API runs at: `http://localhost:3000`

@@ -2,7 +2,7 @@ from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
 from datetime import datetime
 from database import Base
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from typing import List, Optional
 
 # SQLAlchemy ORM Models
@@ -51,8 +51,7 @@ class RoutineStepResponse(RoutineStepBase):
     routine_id: int
     order: int
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class RoutineBase(BaseModel):
@@ -68,8 +67,7 @@ class RoutineResponse(RoutineBase):
     date: datetime
     steps: List[RoutineStepResponse]
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class RoutineUpdate(BaseModel):
