@@ -161,22 +161,15 @@ pub fn run() {
         }
         Err(e) => {
           log::error!("Failed to start backend: {}", e);
-
-          // Show error dialog to user
-          use tauri::api::dialog;
-          let error_msg = format!(
-            "Failed to start backend server:\n\n{}\n\n\
-            Please ensure:\n\
+          log::error!(
+            "Please check:\n\
             - Python is installed and in PATH\n\
             - Port 3000 is available\n\
             - Backend files are properly bundled\n\n\
-            Check logs for more details.",
-            e
+            Logs are saved to the application data directory."
           );
-
-          if let Some(window) = app.get_webview_window("main") {
-            dialog::message(Some(&window), "Backend Error", error_msg);
-          }
+          // The app will continue to run, but API calls will fail
+          // Users will see "Failed to fetch" errors in the UI
         }
       }
 
