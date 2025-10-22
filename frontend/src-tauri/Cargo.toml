@@ -1,6 +1,6 @@
 [package]
 name = "fortiflow"
-version = "0.1.3"
+version = "0.1.4"
 description = "FortiFlow - Master your flow. Map by map."
 authors = ["Alban Teissier <alban.teissier.dev@gmail.com>"]
 license = "Proprietary"
