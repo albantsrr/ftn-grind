@@ -31,15 +31,40 @@ fn start_backend() -> Result<Child, Box<dyn std::error::Error>> {
             .ok_or("Failed to get parent directory")?
             .join("backend")
     } else {
-        // Production: backend is bundled with the app
-        // This will need to be adjusted based on your bundling strategy
-        std::env::current_exe()?
+        // Production: backend is bundled in resources
+        // On Windows MSI: usually in Program Files/FortiFlow/
+        let exe_dir = std::env::current_exe()?
             .parent()
             .ok_or("Failed to get exe directory")?
-            .join("backend")
+            .to_path_buf();
+
+        // Try multiple possible locations
+        let possible_paths = vec![
+            exe_dir.join("backend"),           // Same directory as exe
+            exe_dir.join("../backend"),        // Parent directory
+            exe_dir.join("resources/backend"), // Resources subdirectory
+        ];
+
+        // Find the first existing path
+        possible_paths.into_iter()
+            .find(|p| p.exists())
+            .ok_or("Backend directory not found in any expected location")?
     };
 
     log::info!("Backend path: {:?}", backend_path);
+    log::info!("Backend exists: {}", backend_path.exists());
+
+    // Verify backend directory exists
+    if !backend_path.exists() {
+        return Err(format!("Backend directory not found at: {:?}", backend_path).into());
+    }
+
+    // Verify main.py exists
+    let main_py = backend_path.join("main.py");
+    if !main_py.exists() {
+        return Err(format!("main.py not found at: {:?}", main_py).into());
+    }
+    log::info!("Found main.py at: {:?}", main_py);
 
     // Start the backend process
     #[cfg(target_os = "windows")]
@@ -47,17 +72,36 @@ fn start_backend() -> Result<Child, Box<dyn std::error::Error>> {
         // Windows: use PowerShell for better command handling
         let script = format!(
             "cd '{}'; \
-            if (!(Test-Path 'venv')) {{ python -m venv venv }}; \
+            Write-Output 'Setting up Python environment...'; \
+            if (!(Test-Path 'venv')) {{ \
+                Write-Output 'Creating venv...'; \
+                python -m venv venv; \
+            }}; \
+            Write-Output 'Activating venv...'; \
             .\\venv\\Scripts\\Activate.ps1; \
+            Write-Output 'Installing dependencies...'; \
             pip install -q -r requirements.txt; \
+            Write-Output 'Starting uvicorn...'; \
             uvicorn main:app --host 127.0.0.1 --port 3000",
             backend_path.display()
         );
 
-        Command::new("powershell")
-            .args(["-NoProfile", "-Command", &script])
-            .creation_flags(0x08000000) // CREATE_NO_WINDOW
-            .spawn()?
+        log::info!("Executing PowerShell script: {}", script);
+
+        // Use stdout/stderr redirection for better debugging
+        use std::process::Stdio;
+
+        let mut cmd = Command::new("powershell");
+        cmd.args(["-NoProfile", "-Command", &script])
+            .current_dir(&backend_path)
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped());
+
+        // Only hide window in release mode if explicitly needed
+        #[cfg(not(debug_assertions))]
+        cmd.creation_flags(0x08000000); // CREATE_NO_WINDOW
+
+        cmd.spawn()?
     };
 
     #[cfg(not(target_os = "windows"))]
@@ -75,12 +119,26 @@ fn start_backend() -> Result<Child, Box<dyn std::error::Error>> {
             .spawn()?
     };
 
-    log::info!("Backend started successfully");
+    log::info!("Backend process spawned, waiting for server to start...");
 
-    // Wait a bit for the server to start
-    std::thread::sleep(std::time::Duration::from_secs(3));
+    // Wait for the server to start with retries
+    let max_retries = 20; // 20 seconds max
+    let mut retries = 0;
 
-    Ok(child)
+    while retries < max_retries {
+        std::thread::sleep(std::time::Duration::from_secs(1));
+
+        if !is_port_available(3000) {
+            log::info!("Backend is now responding on port 3000");
+            return Ok(child);
+        }
+
+        retries += 1;
+        log::info!("Waiting for backend... ({}/{})", retries, max_retries);
+    }
+
+    log::error!("Backend failed to start within {} seconds", max_retries);
+    Err("Backend failed to start - port 3000 not responding".into())
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -88,13 +146,12 @@ pub fn run() {
   tauri::Builder::default()
     .plugin(tauri_plugin_shell::init())
     .setup(|app| {
-      if cfg!(debug_assertions) {
-        app.handle().plugin(
-          tauri_plugin_log::Builder::default()
-            .level(log::LevelFilter::Info)
-            .build(),
-        )?;
-      }
+      // Enable logs in both dev and production
+      app.handle().plugin(
+        tauri_plugin_log::Builder::default()
+          .level(log::LevelFilter::Info)
+          .build(),
+      )?;
 
       // Start the backend process
       match start_backend() {
@@ -103,7 +160,23 @@ pub fn run() {
           log::info!("Backend process started and managed");
         }
         Err(e) => {
-          log::warn!("Failed to start backend or backend already running: {}", e);
+          log::error!("Failed to start backend: {}", e);
+
+          // Show error dialog to user
+          use tauri::api::dialog;
+          let error_msg = format!(
+            "Failed to start backend server:\n\n{}\n\n\
+            Please ensure:\n\
+            - Python is installed and in PATH\n\
+            - Port 3000 is available\n\
+            - Backend files are properly bundled\n\n\
+            Check logs for more details.",
+            e
+          );
+
+          if let Some(window) = app.get_webview_window("main") {
+            dialog::message(Some(&window), "Backend Error", error_msg);
+          }
         }
       }
 

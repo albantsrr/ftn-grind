@@ -21,6 +21,7 @@ docs/
 
 ### For Developers
 - **[Setup Guide](setup/TAURI_SETUP.md)** - Install dependencies and run the app
+- **[Troubleshooting](setup/TROUBLESHOOTING.md)** - Fix common production issues
 - **[Quick Release](release/QUICK_RELEASE.md)** - Create a new release in minutes
 - **[Complete Release Guide](release/RELEASE.md)** - Detailed release process with troubleshooting
 
