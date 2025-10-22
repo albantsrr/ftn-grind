@@ -56,6 +56,13 @@ jobs:
         working-directory: frontend
         run: npm ci
 
+      - name: Download embedded Python
+        working-directory: backend
+        shell: bash
+        run: |
+          chmod +x download-python.sh
+          ./download-python.sh
+
       - name: Install backend dependencies
         working-directory: backend
         run: |
@@ -75,10 +82,24 @@ jobs:
           cp backend/*.sh frontend/src-tauri/backend/ 2>/dev/null || true
           cp -r backend/routers frontend/src-tauri/backend/ 2>/dev/null || true
           cp -r backend/tests frontend/src-tauri/backend/ 2>/dev/null || true
+          # Copy embedded Python
+          echo "Copying embedded Python..."
+          mkdir -p frontend/src-tauri/backend/python-embedded
+          cp -r backend/python-embedded/README.md frontend/src-tauri/backend/python-embedded/ 2>/dev/null || true
+          if [ -d "backend/python-embedded/windows/python" ]; then
+            cp -r backend/python-embedded/windows frontend/src-tauri/backend/python-embedded/
+          fi
+          if [ -d "backend/python-embedded/linux/python" ]; then
+            cp -r backend/python-embedded/linux frontend/src-tauri/backend/python-embedded/
+          fi
+          if [ -d "backend/python-embedded/macos/python" ]; then
+            cp -r backend/python-embedded/macos frontend/src-tauri/backend/python-embedded/
+          fi
           # Remove __pycache__ and .pyc files
           find frontend/src-tauri/backend -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
           find frontend/src-tauri/backend -type f -name "*.pyc" -delete 2>/dev/null || true
           ls -la frontend/src-tauri/backend/
+          ls -la frontend/src-tauri/backend/python-embedded/ 2>/dev/null || echo "No python-embedded directory"
 
       - name: Build Tauri application
         working-directory: frontend

@@ -1,6 +1,7 @@
 use tauri::Manager;
 use std::process::{Command, Child};
 use std::sync::Mutex;
+use std::path::PathBuf;
 use port_scanner::scan_port_addr;
 
 #[cfg(target_os = "windows")]
@@ -12,6 +13,30 @@ fn is_port_available(port: u16) -> bool {
     !scan_port_addr(format!("127.0.0.1:{}", port))
 }
 
+/// Get the path to the embedded Python executable
+fn get_embedded_python_path(backend_path: &PathBuf) -> Result<PathBuf, Box<dyn std::error::Error>> {
+    let python_embedded_dir = backend_path.join("python-embedded");
+
+    #[cfg(target_os = "windows")]
+    let python_exe = python_embedded_dir.join("windows/python/python.exe");
+
+    #[cfg(target_os = "linux")]
+    let python_exe = python_embedded_dir.join("linux/python/bin/python3");
+
+    #[cfg(target_os = "macos")]
+    let python_exe = python_embedded_dir.join("macos/python/bin/python3");
+
+    if !python_exe.exists() {
+        return Err(format!(
+            "Embedded Python not found at: {:?}. Please ensure the application was built correctly.",
+            python_exe
+        ).into());
+    }
+
+    log::info!("Using embedded Python at: {:?}", python_exe);
+    Ok(python_exe)
+}
+
 fn start_backend<R: tauri::Runtime>(app: &tauri::AppHandle<R>) -> Result<Child, Box<dyn std::error::Error>> {
     // Check if backend is already running
     if !is_port_available(3000) {
@@ -19,7 +44,7 @@ fn start_backend<R: tauri::Runtime>(app: &tauri::AppHandle<R>) -> Result<Child, 
         return Err("Backend already running".into());
     }
 
-    log::info!("Starting FastAPI backend...");
+    log::info!("Starting FastAPI backend with embedded Python...");
 
     // Determine the path to the backend directory
     let backend_path = if cfg!(debug_assertions) {
@@ -69,6 +94,11 @@ fn start_backend<R: tauri::Runtime>(app: &tauri::AppHandle<R>) -> Result<Child, 
     }
     log::info!("Found main.py at: {:?}", main_py);
 
+    // Get embedded Python path
+    let python_exe = get_embedded_python_path(&backend_path)?;
+    let python_exe_str = python_exe.to_str()
+        .ok_or("Python path contains invalid UTF-8")?;
+
     // Start the backend process
     #[cfg(target_os = "windows")]
     let child = {
@@ -82,38 +112,37 @@ fn start_backend<R: tauri::Runtime>(app: &tauri::AppHandle<R>) -> Result<Child, 
         // Create log file path for backend startup
         let log_file = format!("{}\\backend_startup.log", backend_path_str);
 
-        // Windows: Enhanced PowerShell script with logging and direct Python execution
-        // This avoids Activate.ps1 which can fail due to ExecutionPolicy
+        // Windows: PowerShell script using embedded Python
+        // No venv needed - using embedded Python directly
         let script = format!(
             "$ErrorActionPreference = 'Continue'; \
             $LogFile = '{}'; \
             function Log {{ param($msg); $timestamp = Get-Date -Format 'yyyy-MM-dd HH:mm:ss'; \"[$timestamp] $msg\" | Tee-Object -FilePath $LogFile -Append | Write-Output }}; \
             try {{ \
-                Log 'Starting backend setup...'; \
+                Log 'Starting backend with embedded Python...'; \
                 cd '{}'; \
                 Log \"Working directory: $(Get-Location)\"; \
-                Log 'Checking for Python...'; \
-                $pythonVersion = python --version 2>&1; \
+                Log 'Embedded Python: {}'; \
+                $pythonVersion = & '{}' --version 2>&1; \
                 Log \"Python version: $pythonVersion\"; \
-                if (!(Test-Path 'venv')) {{ \
-                    Log 'Creating virtual environment...'; \
-                    python -m venv venv 2>&1 | Tee-Object -FilePath $LogFile -Append; \
-                    if ($LASTEXITCODE -ne 0) {{ Log 'ERROR: Failed to create venv'; exit 1 }}; \
-                    Log 'Virtual environment created successfully'; \
-                }}; \
                 Log 'Installing dependencies...'; \
-                .\\venv\\Scripts\\python.exe -m pip install --upgrade pip 2>&1 | Tee-Object -FilePath $LogFile -Append; \
-                .\\venv\\Scripts\\python.exe -m pip install -r requirements.txt 2>&1 | Tee-Object -FilePath $LogFile -Append; \
+                & '{}' -m pip install --upgrade pip --quiet 2>&1 | Tee-Object -FilePath $LogFile -Append; \
+                & '{}' -m pip install -r requirements.txt --quiet 2>&1 | Tee-Object -FilePath $LogFile -Append; \
                 if ($LASTEXITCODE -ne 0) {{ Log 'ERROR: Failed to install dependencies'; exit 1 }}; \
                 Log 'Dependencies installed successfully'; \
                 Log 'Starting uvicorn server on port 3000...'; \
-                .\\venv\\Scripts\\python.exe -m uvicorn main:app --host 127.0.0.1 --port 3000 2>&1 | Tee-Object -FilePath $LogFile -Append; \
+                & '{}' -m uvicorn main:app --host 127.0.0.1 --port 3000 2>&1 | Tee-Object -FilePath $LogFile -Append; \
             }} catch {{ \
                 Log \"FATAL ERROR: $_\"; \
                 exit 1 \
             }}",
             log_file,
-            backend_path_str
+            backend_path_str,
+            python_exe_str,
+            python_exe_str,
+            python_exe_str,
+            python_exe_str,
+            python_exe_str
         );
 
         log::info!("Executing PowerShell script with logging to: {}", log_file);
@@ -140,101 +169,73 @@ fn start_backend<R: tauri::Runtime>(app: &tauri::AppHandle<R>) -> Result<Child, 
 
     #[cfg(not(target_os = "windows"))]
     let child = {
+        // Linux/macOS: Use embedded Python directly, no venv
+        let cmd_str = format!(
+            "cd {} && \
+            {} -m pip install --upgrade pip --quiet && \
+            {} -m pip install -r requirements.txt --quiet && \
+            {} -m uvicorn main:app --host 127.0.0.1 --port 3000",
+            backend_path.to_str().unwrap(),
+            python_exe_str,
+            python_exe_str,
+            python_exe_str
+        );
+
+        log::info!("Executing: {}", cmd_str);
+
         Command::new("sh")
             .arg("-c")
-            .arg(format!(
-                "cd {} && \
-                if [ ! -d venv ]; then python3 -m venv venv; fi && \
-                source venv/bin/activate && \
-                pip install -q -r requirements.txt && \
-                uvicorn main:app --host 127.0.0.1 --port 3000",
-                backend_path.display()
-            ))
+            .arg(&cmd_str)
+            .current_dir(&backend_path)
             .spawn()?
     };
 
-    log::info!("Backend process spawned, waiting for server to start...");
-
-    // Wait for the server to start with retries
-    let max_retries = 30; // 30 seconds max (increased for first-time setup)
-    let mut retries = 0;
-
-    while retries < max_retries {
-        std::thread::sleep(std::time::Duration::from_secs(1));
-
-        if !is_port_available(3000) {
-            log::info!("Backend is now responding on port 3000");
-            return Ok(child);
-        }
-
-        retries += 1;
-        log::info!("Waiting for backend... ({}/{})", retries, max_retries);
-    }
-
-    log::error!("Backend failed to start within {} seconds", max_retries);
-
-    #[cfg(target_os = "windows")]
-    {
-        let backend_path_str = backend_path.to_str().unwrap_or("unknown");
-        let log_file = format!("{}\\backend_startup.log", backend_path_str);
-        log::error!("Check the startup log at: {}", log_file);
-        log::error!("Common issues:");
-        log::error!("  - Python not installed or not in PATH");
-        log::error!("  - Port 3000 already in use by another process");
-        log::error!("  - Missing dependencies or network issues during pip install");
-        log::error!("  - Antivirus blocking Python execution");
-    }
-
-    Err("Backend failed to start - port 3000 not responding. Check backend_startup.log for details.".into())
+    log::info!("Backend process started successfully");
+    Ok(child)
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-  tauri::Builder::default()
-    .plugin(tauri_plugin_shell::init())
-    .setup(|app| {
-      // Enable logs in both dev and production
-      app.handle().plugin(
-        tauri_plugin_log::Builder::default()
-          .level(log::LevelFilter::Info)
-          .build(),
-      )?;
+    env_logger::init();
 
-      // Start the backend process
-      match start_backend(&app.handle()) {
-        Ok(child) => {
-          app.manage(BackendProcess(Mutex::new(Some(child))));
-          log::info!("Backend process started and managed");
-        }
-        Err(e) => {
-          log::error!("Failed to start backend: {}", e);
-          log::error!(
-            "Please check:\n\
-            - Python is installed and in PATH\n\
-            - Port 3000 is available\n\
-            - Backend files are properly bundled\n\n\
-            Logs are saved to the application data directory."
-          );
-          // The app will continue to run, but API calls will fail
-          // Users will see "Failed to fetch" errors in the UI
-        }
-      }
+    tauri::Builder::default()
+        .plugin(tauri_plugin_shell::init())
+        .manage(BackendProcess(Mutex::new(None)))
+        .setup(|app| {
+            log::info!("Setting up FortiFlow application");
 
-      Ok(())
-    })
-    .on_window_event(|window, event| {
-      if let tauri::WindowEvent::CloseRequested { .. } = event {
-        // Kill the backend process when the window closes
-        if let Some(backend) = window.app_handle().try_state::<BackendProcess>() {
-          if let Ok(mut process) = backend.0.lock() {
-            if let Some(mut child) = process.take() {
-              let _ = child.kill();
-              log::info!("Backend process terminated");
+            let app_handle = app.handle().clone();
+
+            // Try to start the backend
+            match start_backend(&app_handle) {
+                Ok(child) => {
+                    log::info!("Backend started successfully");
+                    let state = app.state::<BackendProcess>();
+                    *state.0.lock().unwrap() = Some(child);
+                }
+                Err(e) => {
+                    log::error!("Failed to start backend: {}", e);
+                    log::error!("The application may not function correctly.");
+                    log::error!("Please check the backend_startup.log file for more details.");
+                }
             }
-          }
-        }
-      }
-    })
-    .run(tauri::generate_context!())
-    .expect("error while running tauri application");
+
+            Ok(())
+        })
+        .on_window_event(|_window, event| {
+            if let tauri::WindowEvent::CloseRequested { .. } = event {
+                log::info!("Window close requested - cleaning up backend");
+
+                let state = _window.state::<BackendProcess>();
+
+                if let Ok(mut backend) = state.0.lock() {
+                    if let Some(mut child) = backend.take() {
+                        log::info!("Killing backend process");
+                        let _ = child.kill();
+                    }
+                };
+            }
+        })
+        .run(tauri::generate_context!())
+        .expect("error while running tauri application");
 }

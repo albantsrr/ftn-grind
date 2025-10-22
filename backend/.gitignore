@@ -30,3 +30,9 @@ htmlcov/
 *.swp
 *.swo
 *~
+
+# Embedded Python binaries (downloaded during build)
+python-embedded/linux/python/
+python-embedded/windows/python/
+python-embedded/macos/python/
+python-embedded/*.tar.gz

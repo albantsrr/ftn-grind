@@ -1,8 +1,18 @@
 # Python Version Compatibility
 
-## Required Python Version
+## ✅ For End Users (v0.2.0+)
 
-FortiFlow backend requires **Python 3.10, 3.11, or 3.12**.
+**Good news!** As of version 0.2.0, FortiFlow includes its own Python runtime. You do **NOT** need to install Python separately.
+
+The application ships with embedded Python 3.12.7, which works independently from any Python version you may have installed on your system.
+
+---
+
+## 📝 For Developers
+
+### Development Requirements
+
+FortiFlow backend development requires **Python 3.10, 3.11, or 3.12** installed on your system.
 
 ## ⚠️ Known Issues
 
