@@ -3,12 +3,14 @@ import { useNavigate, Link } from 'react-router-dom';
 import type { RoutineCreate, RoutineStep, SoundType } from '../types';
 import { api } from '../services/api';
 import { SOUND_TYPES, playSound } from '../utils/sounds';
+import ImageSelector from '../components/ImageSelector';
 
 export default function CreateRoutine() {
   const navigate = useNavigate();
   const [routineName, setRoutineName] = useState('');
   const [soundType, setSoundType] = useState<SoundType>('beep');
   const [volume, setVolume] = useState(30);
+  const [imageUrl, setImageUrl] = useState('/default_image.jpg');
   const [steps, setSteps] = useState<Omit<RoutineStep, 'id' | 'routine_id' | 'order'>[]>([
     { nom: '', code_map: '', duree: 60, tips: '' }
   ]);
@@ -27,6 +29,56 @@ export default function CreateRoutine() {
     const newSteps = [...steps];
     newSteps[index] = { ...newSteps[index], [field]: value };
     setSteps(newSteps);
+  };
+
+  const moveStep = (fromIndex: number, toIndex: number) => {
+    const newSteps = [...steps];
+    const [movedStep] = newSteps.splice(fromIndex, 1);
+    newSteps.splice(toIndex, 0, movedStep);
+    setSteps(newSteps);
+  };
+
+  const moveStepUp = (index: number) => {
+    if (index > 0) {
+      moveStep(index, index - 1);
+    }
+  };
+
+  const moveStepDown = (index: number) => {
+    if (index < steps.length - 1) {
+      moveStep(index, index + 1);
+    }
+  };
+
+  // Drag and drop handlers
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+
+  const handleDragStart = (index: number) => {
+    setDraggedIndex(index);
+  };
+
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    setDragOverIndex(index);
+  };
+
+  const handleDragLeave = () => {
+    setDragOverIndex(null);
+  };
+
+  const handleDrop = (e: React.DragEvent, dropIndex: number) => {
+    e.preventDefault();
+    if (draggedIndex !== null && draggedIndex !== dropIndex) {
+      moveStep(draggedIndex, dropIndex);
+    }
+    setDraggedIndex(null);
+    setDragOverIndex(null);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedIndex(null);
+    setDragOverIndex(null);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -56,6 +108,7 @@ export default function CreateRoutine() {
         nom: routineName,
         sound_type: soundType,
         volume: volume,
+        image_url: imageUrl,
         steps: steps.map(step => ({
           nom: step.nom,
           code_map: step.code_map,
@@ -85,49 +138,56 @@ export default function CreateRoutine() {
   const totalDuration = steps.reduce((sum, step) => sum + step.duree, 0);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-purple-50 p-8">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-gray-900 dark:to-gray-800 p-8 transition-colors">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <Link to="/" className="text-indigo-600 hover:text-indigo-700 mb-2 inline-block">
+            <Link to="/" className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 mb-2 inline-block">
               ← Back to routines
             </Link>
-            <h1 className="text-4xl font-bold text-gray-900">Create New Routine</h1>
+            <h1 className="text-4xl font-bold text-gray-900 dark:text-white">Create New Routine</h1>
           </div>
         </div>
 
         {/* Error message */}
         {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+          <div className="bg-red-100 dark:bg-red-900/30 border border-red-400 dark:border-red-600 text-red-700 dark:text-red-300 px-4 py-3 rounded mb-4">
             {error}
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Routine name */}
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Routine Name
-            </label>
-            <input
-              type="text"
-              value={routineName}
-              onChange={(e) => setRoutineName(e.target.value)}
-              placeholder="e.g., Daily Warmup"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-              required
+          {/* Routine name and image */}
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 space-y-6">
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
+                Routine Name
+              </label>
+              <input
+                type="text"
+                value={routineName}
+                onChange={(e) => setRoutineName(e.target.value)}
+                placeholder="e.g., Daily Warmup"
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                required
+              />
+            </div>
+
+            <ImageSelector
+              currentImage={imageUrl}
+              onImageChange={setImageUrl}
             />
           </div>
 
           {/* Sound settings */}
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Sound Settings</h2>
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Sound Settings</h2>
 
             <div className="space-y-4">
               {/* Sound type selector */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
                   Alert Sound
                 </label>
                 <div className="grid grid-cols-2 gap-3">
@@ -141,27 +201,27 @@ export default function CreateRoutine() {
                       }}
                       className={`p-3 rounded-lg border-2 text-left transition-all ${
                         soundType === sound.value
-                          ? 'border-indigo-600 bg-indigo-50'
-                          : 'border-gray-200 hover:border-indigo-300'
+                          ? 'border-indigo-600 bg-indigo-50 dark:bg-indigo-900/30'
+                          : 'border-gray-200 dark:border-gray-600 hover:border-indigo-300 dark:hover:border-indigo-500'
                       }`}
                     >
-                      <div className="font-semibold text-gray-900">{sound.label}</div>
-                      <div className="text-xs text-gray-500 mt-1">{sound.description}</div>
+                      <div className="font-semibold text-gray-900 dark:text-white">{sound.label}</div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">{sound.description}</div>
                     </button>
                   ))}
                 </div>
-                <p className="text-xs text-gray-500 mt-2">
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
                   Click a sound to preview it
                 </p>
               </div>
 
               {/* Volume slider */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
                   Volume: {volume}%
                 </label>
                 <div className="flex items-center gap-4">
-                  <span className="text-gray-500 text-sm">🔈</span>
+                  <span className="text-gray-500 dark:text-gray-400 text-sm">🔈</span>
                   <input
                     type="range"
                     min="0"
@@ -173,11 +233,11 @@ export default function CreateRoutine() {
                       background: `linear-gradient(to right, #4f46e5 0%, #4f46e5 ${volume}%, #e5e7eb ${volume}%, #e5e7eb 100%)`
                     }}
                   />
-                  <span className="text-gray-500 text-sm">🔊</span>
+                  <span className="text-gray-500 dark:text-gray-400 text-sm">🔊</span>
                   <button
                     type="button"
                     onClick={() => playSound(soundType, volume)}
-                    className="px-3 py-1 bg-indigo-100 hover:bg-indigo-200 text-indigo-700 rounded text-sm font-medium transition-colors"
+                    className="px-3 py-1 bg-indigo-100 dark:bg-indigo-900/30 hover:bg-indigo-200 dark:hover:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 rounded text-sm font-medium transition-colors"
                   >
                     Test
                   </button>
@@ -189,86 +249,137 @@ export default function CreateRoutine() {
           {/* Steps */}
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold text-gray-900">Steps</h2>
-              <span className="text-sm text-gray-600">
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Steps</h2>
+              <span className="text-sm text-gray-600 dark:text-gray-300">
                 Total: {formatDuration(totalDuration)}
               </span>
             </div>
 
             {steps.map((step, index) => (
-              <div key={index} className="bg-white rounded-lg shadow-md p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-gray-700">
-                    Step {index + 1}
-                  </h3>
-                  {steps.length > 1 && (
+              <div
+                key={index}
+                draggable
+                onDragStart={() => handleDragStart(index)}
+                onDragOver={(e) => handleDragOver(e, index)}
+                onDragLeave={handleDragLeave}
+                onDrop={(e) => handleDrop(e, index)}
+                onDragEnd={handleDragEnd}
+                className={`bg-white dark:bg-gray-800 rounded-lg shadow-md transition-all ${
+                  draggedIndex === index
+                    ? 'opacity-50 scale-95'
+                    : dragOverIndex === index
+                    ? 'ring-2 ring-indigo-400 scale-[1.02]'
+                    : ''
+                }`}
+              >
+                <div className="flex items-start gap-3 p-6">
+                  {/* Drag Handle */}
+                  <div className="flex flex-col items-center gap-2 pt-1">
                     <button
                       type="button"
-                      onClick={() => removeStep(index)}
-                      className="text-red-500 hover:text-red-700"
+                      className="cursor-grab active:cursor-grabbing text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 text-xl leading-none p-1"
+                      title="Drag to reorder"
                     >
-                      Remove
+                      ⋮⋮
                     </button>
-                  )}
-                </div>
-
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Exercise Name
-                    </label>
-                    <input
-                      type="text"
-                      value={step.nom}
-                      onChange={(e) => updateStep(index, 'nom', e.target.value)}
-                      placeholder="e.g., Raider's Aim Map"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                      required
-                    />
+                    <div className="flex flex-col gap-1">
+                      <button
+                        type="button"
+                        onClick={() => moveStepUp(index)}
+                        disabled={index === 0}
+                        className="text-gray-400 dark:text-gray-500 hover:text-indigo-600 dark:hover:text-indigo-400 disabled:opacity-30 disabled:cursor-not-allowed text-sm"
+                        title="Move up"
+                      >
+                        ▲
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => moveStepDown(index)}
+                        disabled={index === steps.length - 1}
+                        className="text-gray-400 dark:text-gray-500 hover:text-indigo-600 dark:hover:text-indigo-400 disabled:opacity-30 disabled:cursor-not-allowed text-sm"
+                        title="Move down"
+                      >
+                        ▼
+                      </button>
+                    </div>
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Map Code
-                    </label>
-                    <input
-                      type="text"
-                      value={step.code_map}
-                      onChange={(e) => updateStep(index, 'code_map', e.target.value)}
-                      placeholder="1234-5678-9999"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent font-mono"
-                      required
-                    />
-                  </div>
+                  {/* Step Content */}
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-200">
+                        Step {index + 1}
+                      </h3>
+                      {steps.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => removeStep(index)}
+                          className="text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 font-medium"
+                        >
+                          Remove
+                        </button>
+                      )}
+                    </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Duration (seconds)
-                    </label>
-                    <input
-                      type="number"
-                      value={step.duree}
-                      onChange={(e) => updateStep(index, 'duree', parseInt(e.target.value) || 0)}
-                      min="1"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                      required
-                    />
-                    <p className="text-sm text-gray-500 mt-1">
-                      {formatDuration(step.duree)}
-                    </p>
-                  </div>
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                          Exercise Name
+                        </label>
+                        <input
+                          type="text"
+                          value={step.nom}
+                          onChange={(e) => updateStep(index, 'nom', e.target.value)}
+                          placeholder="e.g., Raider's Aim Map"
+                          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                          required
+                        />
+                      </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Tips (optional)
-                    </label>
-                    <textarea
-                      value={step.tips}
-                      onChange={(e) => updateStep(index, 'tips', e.target.value)}
-                      placeholder="Focus on headshot tracking..."
-                      rows={2}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                    />
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                          Map Code
+                        </label>
+                        <input
+                          type="text"
+                          value={step.code_map}
+                          onChange={(e) => updateStep(index, 'code_map', e.target.value)}
+                          placeholder="1234-5678-9999"
+                          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent font-mono"
+                          required
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                          Duration (seconds)
+                        </label>
+                        <input
+                          type="number"
+                          value={step.duree}
+                          onChange={(e) => updateStep(index, 'duree', parseInt(e.target.value) || 0)}
+                          min="1"
+                          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                          required
+                        />
+                        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                          {formatDuration(step.duree)}
+                        </p>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                          Tips (optional)
+                        </label>
+                        <textarea
+                          value={step.tips}
+                          onChange={(e) => updateStep(index, 'tips', e.target.value)}
+                          placeholder="Focus on headshot tracking..."
+                          rows={2}
+                          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                        />
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -277,7 +388,7 @@ export default function CreateRoutine() {
             <button
               type="button"
               onClick={addStep}
-              className="w-full py-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-indigo-500 hover:text-indigo-600 transition-colors"
+              className="w-full py-3 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg text-gray-600 dark:text-gray-300 hover:border-indigo-500 dark:hover:border-indigo-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
             >
               + Add Step
             </button>
@@ -287,7 +398,7 @@ export default function CreateRoutine() {
           <div className="flex gap-4">
             <Link
               to="/"
-              className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 py-3 rounded-lg font-semibold text-center transition-colors"
+              className="flex-1 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 py-3 rounded-lg font-semibold text-center transition-colors"
             >
               Cancel
             </Link>

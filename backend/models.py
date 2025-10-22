@@ -15,6 +15,7 @@ class Routine(Base):
     date = Column(DateTime, default=datetime.utcnow)
     sound_type = Column(String, default="beep")  # Type of sound: beep, bell, chime, notification
     volume = Column(Integer, default=30)  # Volume 0-100
+    image_url = Column(String, default="/default_image.jpg")  # Image URL/path for the routine
 
     # Relationship with steps
     steps = relationship("RoutineStep", back_populates="routine", cascade="all, delete-orphan")
@@ -60,6 +61,7 @@ class RoutineBase(BaseModel):
     nom: str
     sound_type: Optional[str] = "beep"
     volume: Optional[int] = 30
+    image_url: Optional[str] = "/default_image.jpg"
 
 
 class RoutineCreate(RoutineBase):
@@ -79,3 +81,4 @@ class RoutineUpdate(BaseModel):
     steps: Optional[List[RoutineStepCreate]] = None
     sound_type: Optional[str] = None
     volume: Optional[int] = None
+    image_url: Optional[str] = None

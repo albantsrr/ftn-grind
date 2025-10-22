@@ -121,12 +121,12 @@ export default function PlayRoutine() {
 
   if (error || !routine) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-purple-50 p-8">
+      <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-gray-900 dark:to-gray-800 p-8">
         <div className="max-w-4xl mx-auto">
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+          <div className="bg-red-100 dark:bg-red-900/30 border border-red-400 dark:border-red-600 text-red-700 dark:text-red-300 px-4 py-3 rounded mb-4">
             {error || 'Routine not found'}
           </div>
-          <Link to="/" className="text-indigo-600 hover:text-indigo-700">
+          <Link to="/" className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300">
             ← Back to routines
           </Link>
         </div>
@@ -139,13 +139,13 @@ export default function PlayRoutine() {
 
   if (isCompleted) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-purple-50 p-8 flex items-center justify-center">
-        <div className="max-w-2xl w-full bg-white rounded-lg shadow-xl p-12 text-center">
+      <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-gray-900 dark:to-gray-800 p-8 flex items-center justify-center">
+        <div className="max-w-2xl w-full bg-white dark:bg-gray-800 rounded-lg shadow-xl p-12 text-center">
           <div className="text-6xl mb-6">🎉</div>
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">
+          <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
             Routine Completed!
           </h1>
-          <p className="text-xl text-gray-600 mb-8">
+          <p className="text-xl text-gray-600 dark:text-gray-300 mb-8">
             Great job finishing "{routine.nom}"
           </p>
           <div className="flex gap-4 justify-center">
@@ -162,7 +162,7 @@ export default function PlayRoutine() {
             </button>
             <Link
               to="/"
-              className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-8 py-3 rounded-lg font-semibold transition-colors"
+              className="bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 text-gray-800 dark:text-gray-100 px-8 py-3 rounded-lg font-semibold transition-colors"
             >
               Back to Routines
             </Link>
@@ -174,37 +174,37 @@ export default function PlayRoutine() {
 
   if (!isRunning) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-purple-50 p-8">
+      <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-gray-900 dark:to-gray-800 p-8">
         <div className="max-w-4xl mx-auto">
-          <Link to="/" className="text-indigo-600 hover:text-indigo-700 mb-6 inline-block">
+          <Link to="/" className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 mb-6 inline-block">
             ← Back to routines
           </Link>
 
-          <div className="bg-white rounded-lg shadow-xl p-8">
-            <h1 className="text-4xl font-bold text-gray-900 mb-6">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-8">
+            <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-6">
               {routine.nom}
             </h1>
 
             <div className="mb-8">
-              <h2 className="text-2xl font-semibold text-gray-800 mb-4">Steps Preview</h2>
+              <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-100 mb-4">Steps Preview</h2>
               <div className="space-y-3">
                 {routine.steps.map((step, index) => (
-                  <div key={index} className="border border-gray-200 rounded-lg p-4">
+                  <div key={index} className="border border-gray-200 dark:border-gray-600 rounded-lg p-4">
                     <div className="flex items-start justify-between">
                       <div>
-                        <div className="font-semibold text-gray-900">
+                        <div className="font-semibold text-gray-900 dark:text-white">
                           {index + 1}. {step.nom}
                         </div>
-                        <div className="text-sm text-gray-600 font-mono mt-1">
+                        <div className="text-sm text-gray-600 dark:text-gray-300 font-mono mt-1">
                           {step.code_map}
                         </div>
                         {step.tips && (
-                          <div className="text-sm text-gray-500 mt-2 italic">
+                          <div className="text-sm text-gray-500 dark:text-gray-400 mt-2 italic">
                             💡 {step.tips}
                           </div>
                         )}
                       </div>
-                      <div className="text-sm font-medium text-gray-700">
+                      <div className="text-sm font-medium text-gray-700 dark:text-gray-200">
                         {formatTime(step.duree)}
                       </div>
                     </div>
@@ -226,28 +226,28 @@ export default function PlayRoutine() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-600 to-purple-600 p-8 flex items-center justify-center">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-600 to-purple-600 dark:from-indigo-900 dark:to-purple-900 p-8 flex items-center justify-center">
       <div className="max-w-4xl w-full">
         {/* Progress bar */}
         <div className="bg-white/20 rounded-full h-2 mb-8">
           <div
-            className="bg-white rounded-full h-2 transition-all duration-300"
+            className="bg-white dark:bg-gray-800 rounded-full h-2 transition-all duration-300"
             style={{ width: `${progress}%` }}
           />
         </div>
 
         {/* Main card */}
-        <div className="bg-white rounded-lg shadow-2xl p-12">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-2xl p-12">
           <div className="text-center mb-8">
-            <div className="text-sm font-semibold text-indigo-600 mb-2">
+            <div className="text-sm font-semibold text-indigo-600 dark:text-indigo-400 mb-2">
               STEP {currentStepIndex + 1} OF {routine.steps.length}
             </div>
-            <h1 className="text-5xl font-bold text-gray-900 mb-4">
+            <h1 className="text-5xl font-bold text-gray-900 dark:text-white mb-4">
               {currentStep.nom}
             </h1>
             <button
               onClick={() => copyMapCode(currentStep.code_map)}
-              className="inline-flex items-center gap-2 text-2xl font-mono bg-gray-100 hover:bg-gray-200 px-6 py-3 rounded-lg transition-colors"
+              className="inline-flex items-center gap-2 text-2xl font-mono bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:bg-gray-700 px-6 py-3 rounded-lg transition-colors"
               title="Click to copy"
             >
               {currentStep.code_map}
@@ -258,19 +258,19 @@ export default function PlayRoutine() {
           </div>
 
           {currentStep.tips && (
-            <div className="bg-indigo-50 border-l-4 border-indigo-600 p-4 mb-8">
+            <div className="bg-indigo-50 dark:bg-indigo-900/30 border-l-4 border-indigo-600 dark:border-indigo-400 p-4 mb-8">
               <div className="flex items-start">
                 <span className="text-2xl mr-3">💡</span>
-                <p className="text-lg text-gray-700">{currentStep.tips}</p>
+                <p className="text-lg text-gray-700 dark:text-gray-200">{currentStep.tips}</p>
               </div>
             </div>
           )}
 
           <div className="text-center mb-8">
-            <div className="text-8xl font-bold text-indigo-600 mb-2">
+            <div className="text-8xl font-bold text-indigo-600 dark:text-indigo-400 mb-2">
               {formatTime(timeRemaining)}
             </div>
-            <div className="text-gray-500">remaining</div>
+            <div className="text-gray-500 dark:text-gray-400">remaining</div>
           </div>
 
           <div className="flex gap-4 justify-center">
@@ -290,7 +290,7 @@ export default function PlayRoutine() {
             )}
             <Link
               to="/"
-              className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-8 py-3 rounded-lg font-semibold transition-colors"
+              className="bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 text-gray-800 dark:text-gray-100 px-8 py-3 rounded-lg font-semibold transition-colors"
             >
               Exit
             </Link>

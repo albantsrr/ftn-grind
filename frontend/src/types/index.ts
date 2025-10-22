@@ -16,6 +16,7 @@ export interface Routine {
   date?: string;
   sound_type?: SoundType;
   volume?: number;
+  image_url?: string;
   steps: RoutineStep[];
 }
 
@@ -23,5 +24,6 @@ export interface RoutineCreate {
   nom: string;
   sound_type?: SoundType;
   volume?: number;
+  image_url?: string;
   steps: Omit<RoutineStep, 'id' | 'routine_id' | 'order'>[];
 }
