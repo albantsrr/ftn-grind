@@ -12,7 +12,7 @@ fn is_port_available(port: u16) -> bool {
     !scan_port_addr(format!("127.0.0.1:{}", port))
 }
 
-fn start_backend() -> Result<Child, Box<dyn std::error::Error>> {
+fn start_backend<R: tauri::Runtime>(app: &tauri::AppHandle<R>) -> Result<Child, Box<dyn std::error::Error>> {
     // Check if backend is already running
     if !is_port_available(3000) {
         log::info!("Backend already running on port 3000");
@@ -31,23 +31,26 @@ fn start_backend() -> Result<Child, Box<dyn std::error::Error>> {
             .ok_or("Failed to get parent directory")?
             .join("backend")
     } else {
-        // Production: backend is bundled in resources
-        // On Windows MSI: usually in Program Files/FortiFlow/
-        let exe_dir = std::env::current_exe()?
-            .parent()
-            .ok_or("Failed to get exe directory")?
-            .to_path_buf();
+        // Production: use Tauri's resource resolver
+        let resource_resolver = app.path();
+        let resource_dir = resource_resolver.resource_dir()
+            .map_err(|e| format!("Failed to get resource directory: {}", e))?;
 
+        log::info!("Resource directory: {:?}", resource_dir);
+
+        // In production, backend files are copied to resource dir root
         // Try multiple possible locations
         let possible_paths = vec![
-            exe_dir.join("backend"),           // Same directory as exe
-            exe_dir.join("../backend"),        // Parent directory
-            exe_dir.join("resources/backend"), // Resources subdirectory
+            resource_dir.clone(),                    // Root of resource dir
+            resource_dir.join("backend"),            // backend subdirectory
+            resource_dir.join("../backend"),         // Parent directory
         ];
 
-        // Find the first existing path
+        log::info!("Trying paths: {:?}", possible_paths);
+
+        // Find the first existing path with main.py
         possible_paths.into_iter()
-            .find(|p| p.exists())
+            .find(|p| p.join("main.py").exists())
             .ok_or("Backend directory not found in any expected location")?
     };
 
@@ -154,7 +157,7 @@ pub fn run() {
       )?;
 
       // Start the backend process
-      match start_backend() {
+      match start_backend(&app.handle()) {
         Ok(child) => {
           app.manage(BackendProcess(Mutex::new(Some(child))));
           log::info!("Backend process started and managed");
