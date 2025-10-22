@@ -62,3 +62,5 @@ logs/
 *.msi
 *.app
 bundle/
+backend/fortiflow.db
+docs/asup.md
