@@ -38,12 +38,12 @@ fn start_backend<R: tauri::Runtime>(app: &tauri::AppHandle<R>) -> Result<Child, 
 
         log::info!("Resource directory: {:?}", resource_dir);
 
-        // In production, backend files are copied to resource dir root
-        // Try multiple possible locations
+        // In production, backend files are in resource_dir/backend/
+        // Try multiple possible locations for compatibility
         let possible_paths = vec![
-            resource_dir.clone(),                    // Root of resource dir
-            resource_dir.join("backend"),            // backend subdirectory
-            resource_dir.join("../backend"),         // Parent directory
+            resource_dir.join("backend"),            // backend subdirectory (primary)
+            resource_dir.clone(),                    // Root of resource dir (fallback)
+            resource_dir.join("../backend"),         // Parent directory (fallback)
         ];
 
         log::info!("Trying paths: {:?}", possible_paths);
