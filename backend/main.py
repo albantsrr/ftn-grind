@@ -3,9 +3,19 @@ from fastapi.middleware.cors import CORSMiddleware
 from routers import routines, timer
 from database import engine, Base
 import models
+import logging
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
 
 # Create database tables
+logger.info("Creating database tables...")
 Base.metadata.create_all(bind=engine)
+logger.info("Database initialized successfully")
 
 app = FastAPI(
     title="FortiFlow API",
@@ -14,17 +24,12 @@ app = FastAPI(
 )
 
 # Configure CORS for local development and Tauri
+# Tauri uses custom protocols (tauri://, http://tauri.localhost, etc.)
+# We need to allow all origins for localhost-only API
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",  # Vite dev server
-        "http://127.0.0.1:5173",  # Vite dev server (alternative)
-        "http://localhost:1420",  # Tauri default
-        "http://127.0.0.1:1420",  # Tauri alternative
-        "tauri://localhost",      # Tauri protocol
-        "https://tauri.localhost", # Tauri HTTPS
-    ],
-    allow_credentials=True,
+    allow_origins=["*"],  # Allow all origins since API is localhost-only
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -35,6 +40,7 @@ app.include_router(timer.router, prefix="/api/timer", tags=["timer"])
 
 @app.get("/")
 async def root():
+    logger.info("Root endpoint accessed")
     return {
         "message": "FortiFlow API is running",
         "docs": "/docs",
@@ -43,4 +49,14 @@ async def root():
 
 @app.get("/health")
 async def health_check():
+    logger.info("Health check endpoint accessed")
     return {"status": "healthy"}
+
+# Log startup
+@app.on_event("startup")
+async def startup_event():
+    logger.info("=" * 50)
+    logger.info("FortiFlow API v1.0.0 started successfully")
+    logger.info("API running on http://127.0.0.1:3000")
+    logger.info("API docs available at http://127.0.0.1:3000/docs")
+    logger.info("=" * 50)

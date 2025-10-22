@@ -58,11 +58,14 @@ export default function CreateRoutine() {
           tips: step.tips || undefined
         }))
       };
-      await api.createRoutine(routine);
+      console.log('Creating routine:', routine);
+      const result = await api.createRoutine(routine);
+      console.log('Routine created successfully:', result);
       navigate('/');
     } catch (err) {
-      setError('Failed to create routine');
-      console.error(err);
+      const errorMessage = err instanceof Error ? err.message : 'Failed to create routine';
+      setError(`Failed to create routine: ${errorMessage}`);
+      console.error('Error creating routine:', err);
     } finally {
       setLoading(false);
     }
