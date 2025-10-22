@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import type { Routine } from '../types';
 import { api } from '../services/api';
+import { playSound } from '../utils/sounds';
 
 export default function PlayRoutine() {
   const { id } = useParams<{ id: string }>();
@@ -58,21 +59,9 @@ export default function PlayRoutine() {
   };
 
   const playBeep = () => {
-    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-    const oscillator = audioContext.createOscillator();
-    const gainNode = audioContext.createGain();
-
-    oscillator.connect(gainNode);
-    gainNode.connect(audioContext.destination);
-
-    oscillator.frequency.value = 800;
-    oscillator.type = 'sine';
-
-    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
-
-    oscillator.start(audioContext.currentTime);
-    oscillator.stop(audioContext.currentTime + 0.3);
+    if (routine) {
+      playSound(routine.sound_type || 'beep', routine.volume || 30);
+    }
   };
 
   const startRoutine = () => {

@@ -9,12 +9,16 @@ FortiFlow is an intelligent training software for Fortnite players designed to h
 ## Technical Stack
 
 - **Frontend**: React 19 + TypeScript + Vite + TailwindCSS + React Router
-- **Backend**: FastAPI with SQLAlchemy ORM (Python 3.10-3.12 required, **NOT 3.13**)
+- **Backend**: FastAPI with SQLAlchemy ORM (Python 3.10-3.12 for development, embedded Python 3.12.7 in production builds)
 - **Database**: SQLite (local file: `backend/fortiflow.db`)
 - **Desktop**: Tauri v2 (Rust) for native desktop packaging
 - **Testing**: pytest with async support
 
-**IMPORTANT:** Python 3.13 is NOT supported. Use Python 3.10, 3.11, or 3.12 only. See [backend/PYTHON_VERSION.md](backend/PYTHON_VERSION.md) for details.
+**IMPORTANT Python Version Notes:**
+- **For end users (v0.2.0+)**: Python is embedded in the application - no installation needed
+- **For developers**: Python 3.10, 3.11, or 3.12 required for backend development
+- **DO NOT use Python 3.13**: Not supported due to dependency compatibility issues
+- See [backend/PYTHON_VERSION.md](backend/PYTHON_VERSION.md) for troubleshooting
 
 ## Development Commands
 
@@ -42,10 +46,10 @@ pytest
 pytest tests/test_routines.py
 pytest tests/test_timer.py
 
-# Run tests with verbose output
-pytest -v
+# Run with verbose output and show print statements
+pytest -v -s
 
-# Run with coverage
+# Run with coverage report
 pytest --cov
 ```
 
@@ -191,8 +195,9 @@ When the Tauri app starts:
 6. Manages backend process lifecycle (kills on app close)
 
 **Development vs Production:**
-- Dev: Backend path is `../../backend` from `frontend/src-tauri/`
-- Production: Backend is bundled in the executable directory
+- Dev: Backend path is `../../backend` from `frontend/src-tauri/`, uses system Python
+- Production: Backend is bundled in the executable directory with embedded Python 3.12.7 (v0.2.0+)
+- Backend directory is specified in `tauri.conf.json` under `bundle.resources`
 
 ## Key Development Notes
 
@@ -200,7 +205,8 @@ When the Tauri app starts:
 - **Tauri Auto-Backend**: The desktop app automatically starts/stops the FastAPI backend; no manual backend launch needed
 - **Rust Required**: Tauri requires Rust toolchain for compilation (see docs/setup/TAURI_SETUP.md)
 - **Timer Implementation**: Backend timer uses asyncio for step sequencing, but frontend should implement client-side timer for responsiveness
-- **Testing**: Backend has pytest configuration with async mode enabled
+- **Testing**: Backend has pytest with async mode enabled (`pytest-asyncio`). Tests use httpx for async HTTP requests
+- **Test Structure**: Test files in `backend/tests/` (test_routines.py, test_timer.py) use FastAPI's TestClient
 - **Field Naming**: Be consistent with existing naming conventions (nom, code_map, duree, tips)
 - **Cascading Deletes**: Deleting a routine automatically deletes all associated steps
 - **Step Ordering**: Steps have an `order` field (integer) that determines execution sequence

@@ -13,6 +13,8 @@ class Routine(Base):
     id = Column(Integer, primary_key=True, index=True)
     nom = Column(String, nullable=False)
     date = Column(DateTime, default=datetime.utcnow)
+    sound_type = Column(String, default="beep")  # Type of sound: beep, bell, chime, notification
+    volume = Column(Integer, default=30)  # Volume 0-100
 
     # Relationship with steps
     steps = relationship("RoutineStep", back_populates="routine", cascade="all, delete-orphan")
@@ -56,6 +58,8 @@ class RoutineStepResponse(RoutineStepBase):
 
 class RoutineBase(BaseModel):
     nom: str
+    sound_type: Optional[str] = "beep"
+    volume: Optional[int] = 30
 
 
 class RoutineCreate(RoutineBase):
@@ -73,3 +77,5 @@ class RoutineResponse(RoutineBase):
 class RoutineUpdate(BaseModel):
     nom: Optional[str] = None
     steps: Optional[List[RoutineStepCreate]] = None
+    sound_type: Optional[str] = None
+    volume: Optional[int] = None

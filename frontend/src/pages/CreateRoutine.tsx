@@ -1,11 +1,14 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import type { RoutineCreate, RoutineStep } from '../types';
+import type { RoutineCreate, RoutineStep, SoundType } from '../types';
 import { api } from '../services/api';
+import { SOUND_TYPES, playSound } from '../utils/sounds';
 
 export default function CreateRoutine() {
   const navigate = useNavigate();
   const [routineName, setRoutineName] = useState('');
+  const [soundType, setSoundType] = useState<SoundType>('beep');
+  const [volume, setVolume] = useState(30);
   const [steps, setSteps] = useState<Omit<RoutineStep, 'id' | 'routine_id' | 'order'>[]>([
     { nom: '', code_map: '', duree: 60, tips: '' }
   ]);
@@ -51,6 +54,8 @@ export default function CreateRoutine() {
       setError(null);
       const routine: RoutineCreate = {
         nom: routineName,
+        sound_type: soundType,
+        volume: volume,
         steps: steps.map(step => ({
           nom: step.nom,
           code_map: step.code_map,
@@ -113,6 +118,72 @@ export default function CreateRoutine() {
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
               required
             />
+          </div>
+
+          {/* Sound settings */}
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Sound Settings</h2>
+
+            <div className="space-y-4">
+              {/* Sound type selector */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Alert Sound
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  {SOUND_TYPES.map((sound) => (
+                    <button
+                      key={sound.value}
+                      type="button"
+                      onClick={() => {
+                        setSoundType(sound.value);
+                        playSound(sound.value, volume);
+                      }}
+                      className={`p-3 rounded-lg border-2 text-left transition-all ${
+                        soundType === sound.value
+                          ? 'border-indigo-600 bg-indigo-50'
+                          : 'border-gray-200 hover:border-indigo-300'
+                      }`}
+                    >
+                      <div className="font-semibold text-gray-900">{sound.label}</div>
+                      <div className="text-xs text-gray-500 mt-1">{sound.description}</div>
+                    </button>
+                  ))}
+                </div>
+                <p className="text-xs text-gray-500 mt-2">
+                  Click a sound to preview it
+                </p>
+              </div>
+
+              {/* Volume slider */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Volume: {volume}%
+                </label>
+                <div className="flex items-center gap-4">
+                  <span className="text-gray-500 text-sm">🔈</span>
+                  <input
+                    type="range"
+                    min="0"
+                    max="100"
+                    value={volume}
+                    onChange={(e) => setVolume(parseInt(e.target.value))}
+                    className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                    style={{
+                      background: `linear-gradient(to right, #4f46e5 0%, #4f46e5 ${volume}%, #e5e7eb ${volume}%, #e5e7eb 100%)`
+                    }}
+                  />
+                  <span className="text-gray-500 text-sm">🔊</span>
+                  <button
+                    type="button"
+                    onClick={() => playSound(soundType, volume)}
+                    className="px-3 py-1 bg-indigo-100 hover:bg-indigo-200 text-indigo-700 rounded text-sm font-medium transition-colors"
+                  >
+                    Test
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Steps */}

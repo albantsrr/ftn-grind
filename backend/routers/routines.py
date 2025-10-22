@@ -50,7 +50,11 @@ def create_routine(routine_data: RoutineCreate, db: Session = Depends(get_db)):
         422: Validation error (handled automatically by FastAPI/Pydantic)
     """
     # Create routine
-    new_routine = Routine(nom=routine_data.nom)
+    new_routine = Routine(
+        nom=routine_data.nom,
+        sound_type=routine_data.sound_type,
+        volume=routine_data.volume
+    )
     db.add(new_routine)
     db.flush()  # Get the routine ID before committing
 
@@ -94,9 +98,13 @@ def update_routine(
             detail=f"Routine with id {routine_id} not found"
         )
 
-    # Update routine name if provided
+    # Update routine fields if provided
     if routine_data.nom is not None:
         routine.nom = routine_data.nom
+    if routine_data.sound_type is not None:
+        routine.sound_type = routine_data.sound_type
+    if routine_data.volume is not None:
+        routine.volume = routine_data.volume
 
     # Update steps if provided
     if routine_data.steps is not None:
