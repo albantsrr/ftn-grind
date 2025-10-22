@@ -79,37 +79,61 @@ fn start_backend<R: tauri::Runtime>(app: &tauri::AppHandle<R>) -> Result<Child, 
 
         log::info!("Normalized backend path for PowerShell: {}", backend_path_str);
 
-        // Windows: use PowerShell for better command handling
+        // Create log file path for backend startup
+        let log_file = format!("{}\\backend_startup.log", backend_path_str);
+
+        // Windows: Enhanced PowerShell script with logging and direct Python execution
+        // This avoids Activate.ps1 which can fail due to ExecutionPolicy
         let script = format!(
-            "cd '{}'; \
-            Write-Output 'Setting up Python environment...'; \
-            if (!(Test-Path 'venv')) {{ \
-                Write-Output 'Creating venv...'; \
-                python -m venv venv; \
-            }}; \
-            Write-Output 'Activating venv...'; \
-            .\\venv\\Scripts\\Activate.ps1; \
-            Write-Output 'Installing dependencies...'; \
-            pip install -q -r requirements.txt; \
-            Write-Output 'Starting uvicorn...'; \
-            uvicorn main:app --host 127.0.0.1 --port 3000",
+            "$ErrorActionPreference = 'Continue'; \
+            $LogFile = '{}'; \
+            function Log {{ param($msg); $timestamp = Get-Date -Format 'yyyy-MM-dd HH:mm:ss'; \"[$timestamp] $msg\" | Tee-Object -FilePath $LogFile -Append | Write-Output }}; \
+            try {{ \
+                Log 'Starting backend setup...'; \
+                cd '{}'; \
+                Log \"Working directory: $(Get-Location)\"; \
+                Log 'Checking for Python...'; \
+                $pythonVersion = python --version 2>&1; \
+                Log \"Python version: $pythonVersion\"; \
+                if (!(Test-Path 'venv')) {{ \
+                    Log 'Creating virtual environment...'; \
+                    python -m venv venv 2>&1 | Tee-Object -FilePath $LogFile -Append; \
+                    if ($LASTEXITCODE -ne 0) {{ Log 'ERROR: Failed to create venv'; exit 1 }}; \
+                    Log 'Virtual environment created successfully'; \
+                }}; \
+                Log 'Installing dependencies...'; \
+                .\\venv\\Scripts\\python.exe -m pip install --upgrade pip 2>&1 | Tee-Object -FilePath $LogFile -Append; \
+                .\\venv\\Scripts\\python.exe -m pip install -r requirements.txt 2>&1 | Tee-Object -FilePath $LogFile -Append; \
+                if ($LASTEXITCODE -ne 0) {{ Log 'ERROR: Failed to install dependencies'; exit 1 }}; \
+                Log 'Dependencies installed successfully'; \
+                Log 'Starting uvicorn server on port 3000...'; \
+                .\\venv\\Scripts\\python.exe -m uvicorn main:app --host 127.0.0.1 --port 3000 2>&1 | Tee-Object -FilePath $LogFile -Append; \
+            }} catch {{ \
+                Log \"FATAL ERROR: $_\"; \
+                exit 1 \
+            }}",
+            log_file,
             backend_path_str
         );
 
-        log::info!("Executing PowerShell script: {}", script);
+        log::info!("Executing PowerShell script with logging to: {}", log_file);
 
         // Use stdout/stderr redirection for better debugging
         use std::process::Stdio;
 
         let mut cmd = Command::new("powershell");
-        cmd.args(["-NoProfile", "-Command", &script])
+        cmd.args(["-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", &script])
             .current_dir(&backend_path)
-            .stdout(Stdio::piped())
-            .stderr(Stdio::piped());
+            .stdout(Stdio::inherit())  // Inherit to see output in console during dev
+            .stderr(Stdio::inherit());
 
-        // Only hide window in release mode if explicitly needed
+        // Only hide window in release mode
         #[cfg(not(debug_assertions))]
-        cmd.creation_flags(0x08000000); // CREATE_NO_WINDOW
+        {
+            cmd.stdout(Stdio::null())
+               .stderr(Stdio::null())
+               .creation_flags(0x08000000); // CREATE_NO_WINDOW
+        }
 
         cmd.spawn()?
     };
@@ -132,7 +156,7 @@ fn start_backend<R: tauri::Runtime>(app: &tauri::AppHandle<R>) -> Result<Child, 
     log::info!("Backend process spawned, waiting for server to start...");
 
     // Wait for the server to start with retries
-    let max_retries = 20; // 20 seconds max
+    let max_retries = 30; // 30 seconds max (increased for first-time setup)
     let mut retries = 0;
 
     while retries < max_retries {
@@ -148,7 +172,20 @@ fn start_backend<R: tauri::Runtime>(app: &tauri::AppHandle<R>) -> Result<Child, 
     }
 
     log::error!("Backend failed to start within {} seconds", max_retries);
-    Err("Backend failed to start - port 3000 not responding".into())
+
+    #[cfg(target_os = "windows")]
+    {
+        let backend_path_str = backend_path.to_str().unwrap_or("unknown");
+        let log_file = format!("{}\\backend_startup.log", backend_path_str);
+        log::error!("Check the startup log at: {}", log_file);
+        log::error!("Common issues:");
+        log::error!("  - Python not installed or not in PATH");
+        log::error!("  - Port 3000 already in use by another process");
+        log::error!("  - Missing dependencies or network issues during pip install");
+        log::error!("  - Antivirus blocking Python execution");
+    }
+
+    Err("Backend failed to start - port 3000 not responding. Check backend_startup.log for details.".into())
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
