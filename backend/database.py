@@ -1,15 +1,19 @@
+import os
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 
-# SQLite database file path
-SQLALCHEMY_DATABASE_URL = "sqlite:///./fortiflow.db"
+# Support both SQLite (development) and PostgreSQL (production)
+# Default to SQLite for local development
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./fortiflow.db")
 
-# Create SQLite engine
+# SQLite-specific configuration
 # connect_args={"check_same_thread": False} is needed only for SQLite
-engine = create_engine(
-    SQLALCHEMY_DATABASE_URL,
-    connect_args={"check_same_thread": False}
-)
+connect_args = {}
+if DATABASE_URL.startswith("sqlite"):
+    connect_args = {"check_same_thread": False}
+
+# Create engine with appropriate configuration
+engine = create_engine(DATABASE_URL, connect_args=connect_args)
 
 # Create SessionLocal class
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)

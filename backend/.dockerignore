@@ -1,0 +1,47 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+
+# Database
+*.db
+*.db-journal
+fortiflow.db
+
+# Docker
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Git
+.git/
+.gitignore
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Tests
+tests/
+pytest_cache/
+.pytest_cache/
+
+# Docs
+*.md
+
+# Logs
+*.log
+
+# Backups
+backups/
+
+# Environment
+.env
+.env.*
