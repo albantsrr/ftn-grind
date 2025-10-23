@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
-from routers import routines, timer
+from routers import routines, timer, auth
 from database import engine, Base
 import models
 import logging
@@ -48,6 +48,7 @@ app.add_middleware(
 )
 
 # Include routers
+app.include_router(auth.router, prefix="/api/auth", tags=["authentication"])
 app.include_router(routines.router, prefix="/api/routines", tags=["routines"])
 app.include_router(timer.router, prefix="/api/timer", tags=["timer"])
 
