@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 interface ImageSelectorProps {
   currentImage: string;
@@ -8,22 +8,22 @@ interface ImageSelectorProps {
 export default function ImageSelector({ currentImage, onImageChange }: ImageSelectorProps) {
   const [previewUrl, setPreviewUrl] = useState(currentImage);
 
+  // Update preview when currentImage prop changes
+  useEffect(() => {
+    setPreviewUrl(currentImage);
+  }, [currentImage]);
+
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      // Create a local URL for preview
-      const url = URL.createObjectURL(file);
-      setPreviewUrl(url);
-
-      // For now, we'll store the file name with a prefix
-      // In a real app, you'd upload to a server
-      onImageChange(`/uploaded/${file.name}`);
-
-      // Store the file in localStorage as base64 for demo purposes
+      // Read file as base64
       const reader = new FileReader();
       reader.onloadend = () => {
         const base64 = reader.result as string;
-        localStorage.setItem(`routine-image-${file.name}`, base64);
+        // Update preview
+        setPreviewUrl(base64);
+        // Send base64 to parent component to store in database
+        onImageChange(base64);
       };
       reader.readAsDataURL(file);
     }

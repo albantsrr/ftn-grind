@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Boolean
+from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey, Boolean
 from sqlalchemy.orm import relationship
 from datetime import datetime
 from database import Base
@@ -30,7 +30,7 @@ class Routine(Base):
     date = Column(DateTime, default=datetime.utcnow)
     sound_type = Column(String, default="beep")  # Type of sound: beep, bell, chime, notification
     volume = Column(Integer, default=30)  # Volume 0-100
-    image_url = Column(String, default="/default_image.jpg")  # Image URL/path for the routine
+    image_url = Column(Text, default="/default_image.jpg")  # Image URL/path or base64 data for the routine
 
     # Relationship with user
     user = relationship("User", back_populates="routines")
