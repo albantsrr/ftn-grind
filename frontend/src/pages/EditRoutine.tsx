@@ -2,11 +2,11 @@ import { useState, useEffect } from 'react';
 import { useNavigate, Link, useParams } from 'react-router-dom';
 import type { Routine, RoutineCreate, RoutineStep, SoundType } from '../types';
 import { api } from '../services/api';
-import { SOUND_TYPES, playSound } from '../utils/sounds';
 import { exportRoutine } from '../utils/routineExport';
 import ImageSelector from '../components/ImageSelector';
+import SoundSelector from '../components/SoundSelector';
+import StepCard from '../components/StepCard';
 
-// Using RoutineStep type for type safety
 type StepInput = Omit<RoutineStep, 'id' | 'routine_id' | 'order'>;
 
 export default function EditRoutine() {
@@ -21,6 +21,10 @@ export default function EditRoutine() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [currentRoutine, setCurrentRoutine] = useState<Routine | null>(null);
+
+  // Drag and drop state
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
   useEffect(() => {
     loadRoutine();
@@ -78,21 +82,14 @@ export default function EditRoutine() {
   };
 
   const moveStepUp = (index: number) => {
-    if (index > 0) {
-      moveStep(index, index - 1);
-    }
+    if (index > 0) moveStep(index, index - 1);
   };
 
   const moveStepDown = (index: number) => {
-    if (index < steps.length - 1) {
-      moveStep(index, index + 1);
-    }
+    if (index < steps.length - 1) moveStep(index, index + 1);
   };
 
   // Drag and drop handlers
-  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
-  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
-
   const handleDragStart = (index: number) => {
     setDraggedIndex(index);
   };
@@ -143,11 +140,11 @@ export default function EditRoutine() {
     try {
       setSaving(true);
       setError(null);
-      const routine: RoutineCreate = {
+      const routineData: RoutineCreate = {
         nom: routineName,
         sound_type: soundType,
-        image_url: imageUrl,
         volume: volume,
+        image_url: imageUrl,
         steps: steps.map(step => ({
           nom: step.nom,
           code_map: step.code_map,
@@ -155,11 +152,12 @@ export default function EditRoutine() {
           tips: step.tips || undefined
         }))
       };
-      await api.updateRoutine(Number(id), routine);
+      await api.updateRoutine(Number(id), routineData);
       navigate('/');
     } catch (err) {
-      setError('Failed to update routine');
-      console.error(err);
+      const errorMessage = err instanceof Error ? err.message : 'Failed to update routine';
+      setError(`Failed to update routine: ${errorMessage}`);
+      console.error('Error updating routine:', err);
     } finally {
       setSaving(false);
     }
@@ -168,303 +166,213 @@ export default function EditRoutine() {
   const formatDuration = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
     const secs = seconds % 60;
-    return minutes > 0 ? `${minutes}m ${secs}s` : `${secs}s`;
+    if (minutes === 0) return `${secs}s`;
+    if (secs === 0) return `${minutes}m`;
+    return `${minutes}m ${secs}s`;
   };
 
   const totalDuration = steps.reduce((sum, step) => sum + step.duree, 0);
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-xl">Loading...</div>
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-gray-900 dark:to-gray-800">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-indigo-600 mx-auto mb-4"></div>
+          <p className="text-gray-600 dark:text-gray-300 text-lg">Loading routine...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-gray-900 dark:to-gray-800 p-8 transition-colors">
-      <div className="max-w-4xl mx-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <Link to="/" className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 mb-2 inline-block">
-              ← Back to routines
-            </Link>
-            <h1 className="text-4xl font-bold text-gray-900 dark:text-white">Edit Routine</h1>
-          </div>
-          <button
-            onClick={handleExport}
-            className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors flex items-center gap-2"
-            title="Export this routine"
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-gray-900 dark:to-gray-800 pb-24">
+      {/* Header */}
+      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-8 py-6 mb-8">
+        <div className="max-w-5xl mx-auto">
+          <Link
+            to="/"
+            className="inline-flex items-center gap-2 text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 mb-4 transition-colors"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
-            Export
-          </button>
+            Back to routines
+          </Link>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-4xl font-bold text-gray-900 dark:text-white">Edit Routine</h1>
+              <p className="text-gray-600 dark:text-gray-400 mt-2">
+                Modify your training flow
+              </p>
+            </div>
+            <button
+              onClick={handleExport}
+              className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors shadow-md hover:shadow-lg"
+              title="Export this routine"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
+              </svg>
+              Export
+            </button>
+          </div>
         </div>
+      </div>
 
+      {/* Form */}
+      <form onSubmit={handleSubmit} className="max-w-5xl mx-auto px-8 space-y-6">
         {/* Error message */}
         {error && (
-          <div className="bg-red-100 dark:bg-red-900/30 border border-red-400 dark:border-red-600 text-red-700 dark:text-red-300 px-4 py-3 rounded mb-4">
-            {error}
+          <div className="bg-red-100 dark:bg-red-900/30 border border-red-400 dark:border-red-600 text-red-700 dark:text-red-300 px-4 py-3 rounded-xl flex items-start gap-3">
+            <svg className="w-5 h-5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span>{error}</span>
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Routine name */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 space-y-6">
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
-                Routine Name
-              </label>
-              <input
-                type="text"
-                value={routineName}
-                onChange={(e) => setRoutineName(e.target.value)}
-                placeholder="e.g., Daily Warmup"
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                required
-              />
+        {/* Section 1: Routine Info */}
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 space-y-6">
+          <div className="flex items-center gap-3 pb-4 border-b border-gray-200 dark:border-gray-700">
+            <div className="w-10 h-10 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg flex items-center justify-center">
+              <svg className="w-6 h-6 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
             </div>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Routine Info</h2>
+          </div>
 
-            <ImageSelector
-              currentImage={imageUrl}
-              onImageChange={setImageUrl}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
+              Routine Name *
+            </label>
+            <input
+              type="text"
+              value={routineName}
+              onChange={(e) => setRoutineName(e.target.value)}
+              placeholder="e.g., Daily Warmup"
+              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-lg"
+              required
             />
           </div>
 
-          {/* Sound settings */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Sound Settings</h2>
+          <ImageSelector
+            currentImage={imageUrl}
+            onImageChange={setImageUrl}
+          />
+        </div>
 
-            <div className="space-y-4">
-              {/* Sound type selector */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
-                  Alert Sound
-                </label>
-                <div className="grid grid-cols-2 gap-3">
-                  {SOUND_TYPES.map((sound) => (
-                    <button
-                      key={sound.value}
-                      type="button"
-                      onClick={() => {
-                        setSoundType(sound.value);
-                        playSound(sound.value, volume);
-                      }}
-                      className={`p-3 rounded-lg border-2 text-left transition-all ${
-                        soundType === sound.value
-                          ? 'border-indigo-600 bg-indigo-50 dark:bg-indigo-900/30'
-                          : 'border-gray-200 dark:border-gray-600 hover:border-indigo-300 dark:hover:border-indigo-500'
-                      }`}
-                    >
-                      <div className="font-semibold text-gray-900 dark:text-white">{sound.label}</div>
-                      <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">{sound.description}</div>
-                    </button>
-                  ))}
-                </div>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-                  Click a sound to preview it
-                </p>
+        {/* Section 2: Sound Settings */}
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 space-y-6">
+          <div className="flex items-center gap-3 pb-4 border-b border-gray-200 dark:border-gray-700">
+            <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center">
+              <svg className="w-6 h-6 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+              </svg>
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Sound Settings</h2>
+          </div>
+
+          <SoundSelector
+            soundType={soundType}
+            volume={volume}
+            onSoundTypeChange={setSoundType}
+            onVolumeChange={setVolume}
+          />
+        </div>
+
+        {/* Section 3: Steps */}
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 space-y-6">
+          <div className="flex items-center justify-between pb-4 border-b border-gray-200 dark:border-gray-700">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center">
+                <svg className="w-6 h-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                </svg>
               </div>
-
-              {/* Volume slider */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
-                  Volume: {volume}%
-                </label>
-                <div className="flex items-center gap-4">
-                  <span className="text-gray-500 text-sm dark:text-gray-400">🔈</span>
-                  <input
-                    type="range"
-                    min="0"
-                    max="100"
-                    value={volume}
-                    onChange={(e) => setVolume(parseInt(e.target.value))}
-                    className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                    style={{
-                      background: `linear-gradient(to right, #4f46e5 0%, #4f46e5 ${volume}%, #e5e7eb ${volume}%, #e5e7eb 100%)`
-                    }}
-                  />
-                  <span className="text-gray-500 text-sm dark:text-gray-400">🔊</span>
-                  <button
-                    type="button"
-                    onClick={() => playSound(soundType, volume)}
-                    className="px-3 py-1 bg-indigo-100 dark:bg-indigo-900/30 hover:bg-indigo-200 dark:hover:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 rounded text-sm font-medium transition-colors"
-                  >
-                    Test
-                  </button>
-                </div>
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Training Steps</h2>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+                  {steps.length} {steps.length === 1 ? 'step' : 'steps'} • Total duration: {formatDuration(totalDuration)}
+                </p>
               </div>
             </div>
           </div>
 
-          {/* Steps */}
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Steps</h2>
-              <span className="text-sm text-gray-600 dark:text-gray-300">
-                Total: {formatDuration(totalDuration)}
-              </span>
-            </div>
-
             {steps.map((step, index) => (
-              <div
+              <StepCard
                 key={index}
-                draggable
+                step={step}
+                index={index}
+                totalSteps={steps.length}
+                onUpdate={(field, value) => updateStep(index, field, value)}
+                onRemove={() => removeStep(index)}
+                onMoveUp={() => moveStepUp(index)}
+                onMoveDown={() => moveStepDown(index)}
                 onDragStart={() => handleDragStart(index)}
                 onDragOver={(e) => handleDragOver(e, index)}
                 onDragLeave={handleDragLeave}
                 onDrop={(e) => handleDrop(e, index)}
                 onDragEnd={handleDragEnd}
-                className={`bg-white dark:bg-gray-800 rounded-lg shadow-md transition-all ${
-                  draggedIndex === index
-                    ? 'opacity-50 scale-95'
-                    : dragOverIndex === index
-                    ? 'ring-2 ring-indigo-400 scale-[1.02]'
-                    : ''
-                }`}
-              >
-                <div className="flex items-start gap-3 p-6">
-                  {/* Drag Handle */}
-                  <div className="flex flex-col items-center gap-2 pt-1">
-                    <button
-                      type="button"
-                      className="cursor-grab active:cursor-grabbing text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 text-xl leading-none p-1"
-                      title="Drag to reorder"
-                    >
-                      ⋮⋮
-                    </button>
-                    <div className="flex flex-col gap-1">
-                      <button
-                        type="button"
-                        onClick={() => moveStepUp(index)}
-                        disabled={index === 0}
-                        className="text-gray-400 hover:text-indigo-600 dark:text-indigo-400 disabled:opacity-30 disabled:cursor-not-allowed text-sm"
-                        title="Move up"
-                      >
-                        ▲
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => moveStepDown(index)}
-                        disabled={index === steps.length - 1}
-                        className="text-gray-400 hover:text-indigo-600 dark:text-indigo-400 disabled:opacity-30 disabled:cursor-not-allowed text-sm"
-                        title="Move down"
-                      >
-                        ▼
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Step Content */}
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-200 dark:text-gray-200">
-                        Step {index + 1}
-                      </h3>
-                      {steps.length > 1 && (
-                        <button
-                          type="button"
-                          onClick={() => removeStep(index)}
-                          className="text-red-500 hover:text-red-700 dark:text-red-300 font-medium"
-                        >
-                          Remove
-                        </button>
-                      )}
-                    </div>
-
-                    <div className="space-y-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
-                          Exercise Name
-                        </label>
-                        <input
-                          type="text"
-                          value={step.nom}
-                          onChange={(e) => updateStep(index, 'nom', e.target.value)}
-                          placeholder="e.g., Raider's Aim Map"
-                          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                          required
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
-                          Map Code
-                        </label>
-                        <input
-                          type="text"
-                          value={step.code_map}
-                          onChange={(e) => updateStep(index, 'code_map', e.target.value)}
-                          placeholder="1234-5678-9999"
-                          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent font-mono"
-                          required
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
-                          Duration (seconds)
-                        </label>
-                        <input
-                          type="number"
-                          value={step.duree}
-                          onChange={(e) => updateStep(index, 'duree', parseInt(e.target.value) || 0)}
-                          min="1"
-                          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                          required
-                        />
-                        <p className="text-sm text-gray-500 mt-1">
-                          {formatDuration(step.duree)}
-                        </p>
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
-                          Tips (optional)
-                        </label>
-                        <textarea
-                          value={step.tips}
-                          onChange={(e) => updateStep(index, 'tips', e.target.value)}
-                          placeholder="Focus on headshot tracking..."
-                          rows={2}
-                          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+                isDragging={draggedIndex === index}
+                isDragOver={dragOverIndex === index}
+              />
             ))}
 
             <button
               type="button"
               onClick={addStep}
-              className="w-full py-3 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg text-gray-600 hover:border-indigo-500 hover:text-indigo-600 dark:text-indigo-400 transition-colors"
+              className="w-full py-4 border-2 border-dashed border-indigo-300 dark:border-indigo-600 rounded-xl text-indigo-600 dark:text-indigo-400 hover:border-indigo-500 dark:hover:border-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-all font-medium flex items-center justify-center gap-2 group"
             >
-              + Add Step
+              <svg className="w-6 h-6 transition-transform group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              Add Step
             </button>
           </div>
+        </div>
+      </form>
 
-          {/* Submit */}
-          <div className="flex gap-4">
+      {/* Sticky Footer */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 px-8 py-4 shadow-2xl z-50">
+        <div className="max-w-5xl mx-auto flex items-center justify-between gap-4">
+          <div className="text-sm text-gray-600 dark:text-gray-400">
+            {steps.length} {steps.length === 1 ? 'step' : 'steps'} • {formatDuration(totalDuration)} total
+          </div>
+          <div className="flex gap-3">
             <Link
               to="/"
-              className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 py-3 rounded-lg font-semibold text-center transition-colors"
+              className="px-6 py-3 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 rounded-lg font-semibold transition-colors flex items-center gap-2"
             >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
               Cancel
             </Link>
             <button
               type="submit"
               disabled={saving}
-              className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-lg font-semibold transition-colors disabled:opacity-50"
+              onClick={handleSubmit}
+              className="px-8 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-lg font-bold transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              title="Save changes to your routine"
             >
-              {saving ? 'Saving...' : 'Save Changes'}
+              {saving ? (
+                <>
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  Save Changes
+                </>
+              )}
             </button>
           </div>
-        </form>
+        </div>
       </div>
     </div>
   );
