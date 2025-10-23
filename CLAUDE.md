@@ -155,7 +155,11 @@ Page-based routing structure:
 - `types/index.ts`: TypeScript interfaces (Routine, RoutineStep, RoutineCreate)
 - `App.tsx`: React Router configuration
 
-**API Configuration:** Backend expected at `http://localhost:3000` (via `VITE_API_URL` or default)
+**API Configuration:**
+- Configured via `VITE_API_URL` environment variable
+- **Development:** `http://localhost:3000` (`.env.development`)
+- **Production:** `http://72.61.166.22` (`.env.production`)
+- See [frontend/ENVIRONMENTS.md](frontend/ENVIRONMENTS.md) for details
 
 ### Tauri Desktop Integration
 
