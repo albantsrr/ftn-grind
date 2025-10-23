@@ -48,9 +48,17 @@ def get_user_by_email(db: Session, email: str) -> Optional[User]:
     return db.query(User).filter(User.email == email).first()
 
 
-def authenticate_user(db: Session, email: str, password: str) -> Optional[User]:
-    """Authenticate a user"""
-    user = get_user_by_email(db, email)
+def get_user_by_username(db: Session, username: str) -> Optional[User]:
+    """Get a user by username"""
+    return db.query(User).filter(User.username == username).first()
+
+
+def authenticate_user(db: Session, username_or_email: str, password: str) -> Optional[User]:
+    """Authenticate a user by username or email"""
+    # Try to find user by username first, then by email
+    user = get_user_by_username(db, username_or_email)
+    if not user:
+        user = get_user_by_email(db, username_or_email)
     if not user:
         return None
     if not verify_password(password, user.hashed_password):

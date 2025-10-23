@@ -9,6 +9,7 @@ from auth import (
     authenticate_user,
     create_access_token,
     get_user_by_email,
+    get_user_by_username,
     get_current_active_user,
     ACCESS_TOKEN_EXPIRE_MINUTES
 )
@@ -18,7 +19,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
-@router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/register", response_model=Token, status_code=status.HTTP_201_CREATED)
 def register(user: UserCreate, db: Session = Depends(get_db)):
     """
     Register a new user
@@ -34,7 +35,7 @@ def register(user: UserCreate, db: Session = Depends(get_db)):
     """
     logger.info(f"Registration attempt for email: {user.email}")
 
-    # Check if user already exists
+    # Check if email already exists
     db_user = get_user_by_email(db, email=user.email)
     if db_user:
         logger.warning(f"Registration failed: email {user.email} already exists")
@@ -43,10 +44,20 @@ def register(user: UserCreate, db: Session = Depends(get_db)):
             detail="Email already registered"
         )
 
+    # Check if username already exists
+    db_user = get_user_by_username(db, username=user.username)
+    if db_user:
+        logger.warning(f"Registration failed: username {user.username} already exists")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Username already taken"
+        )
+
     # Create new user
     hashed_password = get_password_hash(user.password)
     db_user = User(
         email=user.email,
+        username=user.username,
         hashed_password=hashed_password,
         full_name=user.full_name
     )
@@ -54,8 +65,18 @@ def register(user: UserCreate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(db_user)
 
+    # Create access token for auto-login after registration
+    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(
+        data={"sub": db_user.email}, expires_delta=access_token_expires
+    )
+
     logger.info(f"User registered successfully: {user.email}")
-    return db_user
+    return {
+        "access_token": access_token,
+        "token_type": "bearer",
+        "user": db_user
+    }
 
 
 @router.post("/login", response_model=Token)
@@ -94,7 +115,11 @@ def login(
     )
 
     logger.info(f"User logged in successfully: {user.email}")
-    return {"access_token": access_token, "token_type": "bearer"}
+    return {
+        "access_token": access_token,
+        "token_type": "bearer",
+        "user": user
+    }
 
 
 @router.get("/me", response_model=UserResponse)

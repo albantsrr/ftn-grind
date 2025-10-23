@@ -12,23 +12,28 @@ class User(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     email = Column(String, unique=True, index=True, nullable=False)
+    username = Column(String, unique=True, index=True, nullable=False)
     hashed_password = Column(String, nullable=False)
     full_name = Column(String, nullable=True)
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.utcnow)
 
     # Relationship with routines (one user has many routines)
-    # routines = relationship("Routine", back_populates="user")
+    routines = relationship("Routine", back_populates="user", cascade="all, delete-orphan")
 
 class Routine(Base):
     __tablename__ = "routines"
 
     id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     nom = Column(String, nullable=False)
     date = Column(DateTime, default=datetime.utcnow)
     sound_type = Column(String, default="beep")  # Type of sound: beep, bell, chime, notification
     volume = Column(Integer, default=30)  # Volume 0-100
     image_url = Column(String, default="/default_image.jpg")  # Image URL/path for the routine
+
+    # Relationship with user
+    user = relationship("User", back_populates="routines")
 
     # Relationship with steps
     steps = relationship("RoutineStep", back_populates="routine", cascade="all, delete-orphan")
@@ -101,6 +106,7 @@ class RoutineUpdate(BaseModel):
 
 class UserBase(BaseModel):
     email: EmailStr
+    username: str
     full_name: Optional[str] = None
 
 
@@ -119,6 +125,7 @@ class UserResponse(UserBase):
 class Token(BaseModel):
     access_token: str
     token_type: str
+    user: UserResponse
 
 
 class TokenData(BaseModel):

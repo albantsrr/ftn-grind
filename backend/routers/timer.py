@@ -1,7 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from database import get_db
-from models import Routine, RoutineStep
+from models import Routine, RoutineStep, User
+from auth import get_current_active_user
 import asyncio
 from datetime import datetime
 from typing import Dict, List
@@ -15,9 +16,13 @@ router = APIRouter()
 
 
 @router.post("/start-routine/{routine_id}")
-async def start_routine(routine_id: int, db: Session = Depends(get_db)) -> Dict:
+async def start_routine(
+    routine_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+) -> Dict:
     """
-    Start executing a routine with timed steps
+    Start executing a routine with timed steps (only if it belongs to the current user)
 
     This endpoint will:
     1. Fetch the routine and its steps
@@ -26,10 +31,13 @@ async def start_routine(routine_id: int, db: Session = Depends(get_db)) -> Dict:
     4. Return execution summary
 
     Raises:
-        404: Routine not found
+        404: Routine not found or doesn't belong to user
     """
-    # Fetch routine with steps
-    routine = db.query(Routine).filter(Routine.id == routine_id).first()
+    # Fetch routine with steps that belongs to the current user
+    routine = db.query(Routine).filter(
+        Routine.id == routine_id,
+        Routine.user_id == current_user.id
+    ).first()
 
     if not routine:
         raise HTTPException(
@@ -104,14 +112,21 @@ async def start_routine(routine_id: int, db: Session = Depends(get_db)) -> Dict:
 
 
 @router.get("/routine-preview/{routine_id}")
-async def preview_routine(routine_id: int, db: Session = Depends(get_db)) -> Dict:
+async def preview_routine(
+    routine_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+) -> Dict:
     """
-    Preview a routine's total duration and steps without executing it
+    Preview a routine's total duration and steps without executing it (only if it belongs to the current user)
 
     Raises:
-        404: Routine not found
+        404: Routine not found or doesn't belong to user
     """
-    routine = db.query(Routine).filter(Routine.id == routine_id).first()
+    routine = db.query(Routine).filter(
+        Routine.id == routine_id,
+        Routine.user_id == current_user.id
+    ).first()
 
     if not routine:
         raise HTTPException(

@@ -7,30 +7,42 @@ from models import (
     RoutineStep,
     RoutineCreate,
     RoutineResponse,
-    RoutineUpdate
+    RoutineUpdate,
+    User
 )
+from auth import get_current_active_user
 
 router = APIRouter()
 
 
 @router.get("/", response_model=List[RoutineResponse])
-def get_all_routines(db: Session = Depends(get_db)):
+def get_all_routines(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
     """
-    Retrieve all routines with their steps
+    Retrieve all routines for the current user
     """
-    routines = db.query(Routine).all()
+    routines = db.query(Routine).filter(Routine.user_id == current_user.id).all()
     return routines
 
 
 @router.get("/{routine_id}", response_model=RoutineResponse)
-def get_routine_by_id(routine_id: int, db: Session = Depends(get_db)):
+def get_routine_by_id(
+    routine_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
     """
-    Retrieve a specific routine by ID
+    Retrieve a specific routine by ID (only if it belongs to the current user)
 
     Raises:
-        404: Routine not found
+        404: Routine not found or doesn't belong to user
     """
-    routine = db.query(Routine).filter(Routine.id == routine_id).first()
+    routine = db.query(Routine).filter(
+        Routine.id == routine_id,
+        Routine.user_id == current_user.id
+    ).first()
 
     if not routine:
         raise HTTPException(
@@ -42,15 +54,20 @@ def get_routine_by_id(routine_id: int, db: Session = Depends(get_db)):
 
 
 @router.post("/", response_model=RoutineResponse, status_code=status.HTTP_201_CREATED)
-def create_routine(routine_data: RoutineCreate, db: Session = Depends(get_db)):
+def create_routine(
+    routine_data: RoutineCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
     """
-    Create a new routine with its steps
+    Create a new routine with its steps for the current user
 
     Raises:
         422: Validation error (handled automatically by FastAPI/Pydantic)
     """
-    # Create routine
+    # Create routine with user_id
     new_routine = Routine(
+        user_id=current_user.id,
         nom=routine_data.nom,
         sound_type=routine_data.sound_type,
         volume=routine_data.volume,
@@ -81,17 +98,21 @@ def create_routine(routine_data: RoutineCreate, db: Session = Depends(get_db)):
 def update_routine(
     routine_id: int,
     routine_data: RoutineUpdate,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
 ):
     """
-    Update an existing routine and/or its steps
+    Update an existing routine and/or its steps (only if it belongs to the current user)
 
     Raises:
-        404: Routine not found
+        404: Routine not found or doesn't belong to user
         422: Validation error
     """
-    # Find routine
-    routine = db.query(Routine).filter(Routine.id == routine_id).first()
+    # Find routine that belongs to the current user
+    routine = db.query(Routine).filter(
+        Routine.id == routine_id,
+        Routine.user_id == current_user.id
+    ).first()
 
     if not routine:
         raise HTTPException(
@@ -133,14 +154,21 @@ def update_routine(
 
 
 @router.delete("/{routine_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_routine(routine_id: int, db: Session = Depends(get_db)):
+def delete_routine(
+    routine_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
     """
-    Delete a routine and all its steps (cascade)
+    Delete a routine and all its steps (cascade) - only if it belongs to the current user
 
     Raises:
-        404: Routine not found
+        404: Routine not found or doesn't belong to user
     """
-    routine = db.query(Routine).filter(Routine.id == routine_id).first()
+    routine = db.query(Routine).filter(
+        Routine.id == routine_id,
+        Routine.user_id == current_user.id
+    ).first()
 
     if not routine:
         raise HTTPException(

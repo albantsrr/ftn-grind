@@ -1,4 +1,8 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { AuthProvider } from './contexts/AuthContext';
+import ProtectedRoute from './components/ProtectedRoute';
+import Login from './pages/Login';
+import Register from './pages/Register';
 import RoutinesList from './pages/RoutinesList';
 import CreateRoutine from './pages/CreateRoutine';
 import EditRoutine from './pages/EditRoutine';
@@ -7,12 +11,47 @@ import PlayRoutine from './pages/PlayRoutine';
 function App() {
   return (
     <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<RoutinesList />} />
-        <Route path="/create" element={<CreateRoutine />} />
-        <Route path="/edit/:id" element={<EditRoutine />} />
-        <Route path="/play/:id" element={<PlayRoutine />} />
-      </Routes>
+      <AuthProvider>
+        <Routes>
+          {/* Public routes */}
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+
+          {/* Protected routes */}
+          <Route
+            path="/"
+            element={
+              <ProtectedRoute>
+                <RoutinesList />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/create"
+            element={
+              <ProtectedRoute>
+                <CreateRoutine />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/edit/:id"
+            element={
+              <ProtectedRoute>
+                <EditRoutine />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/play/:id"
+            element={
+              <ProtectedRoute>
+                <PlayRoutine />
+              </ProtectedRoute>
+            }
+          />
+        </Routes>
+      </AuthProvider>
     </BrowserRouter>
   );
 }
