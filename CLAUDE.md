@@ -24,83 +24,43 @@ FortiFlow is a desktop training application for Fortnite players. Users create t
 ### Backend
 ```bash
 cd backend
+python --version  # Must be 3.10-3.12 (NOT 3.13)
 
-# Check Python version first (must be 3.10-3.12, NOT 3.13)
-python --version
-
-# Using the provided launcher script (recommended)
+# Start server (recommended)
 ./run_backend.sh
 
-# Manual setup
-python3 -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
-pip install --upgrade pip
-pip install -r requirements.txt
-uvicorn main:app --reload --host 127.0.0.1 --port 3000
+# Manual: python3 -m venv venv && source venv/bin/activate
+# pip install -r requirements.txt && uvicorn main:app --reload --port 3000
 
-# Run all tests
-pytest
-
-# Run specific test file
-pytest tests/test_routines.py
-pytest tests/test_timer.py
-
-# Run with verbose output and show print statements
-pytest -v -s
-
-# Run with coverage report
-pytest --cov
+# Tests
+pytest                    # All tests
+pytest tests/test_*.py   # Specific file
+pytest -v -s             # Verbose with output
+pytest --cov             # With coverage
 ```
 
-Backend API runs at: `http://localhost:3000`
-- API docs: `http://localhost:3000/docs`
-- Health check: `http://localhost:3000/health`
+API at `http://localhost:3000` - docs at `/docs`, health at `/health`
 
 ### Frontend
 ```bash
 cd frontend
-
-# Install dependencies
-npm install
-
-# Development server
-npm run dev
-
-# Build for production
-npm run build
-
-# Lint code
-npm run lint
-
-# Preview production build
-npm run preview
+npm install          # First time only
+npm run dev          # Dev server at http://localhost:5173
+npm run build        # Production build
+npm run lint         # Lint code
+npm run preview      # Preview build
 ```
-
-Frontend runs at: `http://localhost:5173`
 
 ### Desktop Application (Tauri)
 ```bash
 cd frontend
-
-# Prerequisites: Install Rust first (see TAURI_SETUP.md)
-# curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-
-# Install dependencies (first time)
-npm install
-
-# Run desktop app in development mode
-# This automatically starts the backend and opens a native window
-npm run tauri:dev
-
-# Build desktop executable for distribution
-npm run tauri:build
+npm install          # First time (+ install Rust via rustup)
+npm run tauri:dev    # Dev mode (auto-starts backend)
+npm run tauri:build  # Build executable → src-tauri/target/release/bundle/
 ```
 
-**Important:** When running in Tauri mode, the backend is started automatically by the Rust code. You do NOT need to run `./run_backend.sh` separately.
-
-Desktop app executable location after build: `frontend/src-tauri/target/release/bundle/`
-
-For detailed Tauri setup instructions, see [docs/setup/TAURI_SETUP.md](docs/setup/TAURI_SETUP.md)
+**Critical:** Tauri auto-starts backend on port 3000. Do NOT run `./run_backend.sh` separately.
+See [TAURI_SETUP.md](docs/setup/TAURI_SETUP.md) for setup details.
 
 ## Architecture
 
@@ -133,12 +93,8 @@ routine_steps:
 - `POST /api/timer/start-routine/{id}`: Execute routine with asyncio.sleep() sequencing
 - `GET /api/timer/routine-preview/{id}`: Preview routine duration
 
-**Backend environments:**
-- **Development (local):** `http://localhost:3000` - SQLite database
-- **Production (VPS):** `http://72.61.166.22` - PostgreSQL + Docker Compose
-- API docs: `/docs`
-- Health check: `/health`
-- See [backend/DEPLOYMENT.md](backend/DEPLOYMENT.md) for deployment guide
+**Environments:** Dev: `http://localhost:3000` (SQLite) | Prod: `http://72.61.166.22` (PostgreSQL+Docker)
+See [DEPLOYMENT.md](backend/DEPLOYMENT.md) for deployment.
 
 ### Frontend (React + TypeScript)
 
@@ -155,65 +111,48 @@ Page-based routing structure:
 - `types/index.ts`: TypeScript interfaces (Routine, RoutineStep, RoutineCreate)
 - `App.tsx`: React Router configuration
 
-**API Configuration:**
-- Configured via `VITE_API_URL` environment variable
-- **Development:** `http://localhost:3000` (`.env.development`)
-- **Production:** `http://72.61.166.22` (`.env.production`)
-- See [frontend/ENVIRONMENTS.md](frontend/ENVIRONMENTS.md) for details
+**API Config:** `VITE_API_URL` - Dev: `http://localhost:3000` | Prod: `http://72.61.166.22`
+See [ENVIRONMENTS.md](frontend/ENVIRONMENTS.md).
 
 ### Tauri Desktop Integration
 
 **Critical Architecture Detail:** Tauri automatically manages the backend process lifecycle.
 
-**Backend Auto-Start (frontend/src-tauri/src/lib.rs):**
-1. Checks if port 3000 is available
-2. Locates backend directory:
-   - **Development**: `../../backend` from `frontend/src-tauri/` (uses system Python)
-   - **Production**: Bundled in resource directory with embedded Python 3.12.7
-3. Uses embedded Python from `backend/python-embedded/{os}/python/` (Windows/Linux/macOS)
-4. Creates venv if needed and installs dependencies
-5. Starts uvicorn server on localhost:3000
-6. Kills backend process when app closes
+**Backend Auto-Start ([lib.rs](frontend/src-tauri/src/lib.rs)):**
+1. Checks port 3000 availability
+2. Locates backend: Dev (`../../backend` + system Python) | Prod (bundled + embedded Python 3.12.7)
+3. Creates venv, installs deps, starts uvicorn on localhost:3000
+4. Kills backend on app close
 
-**Important:** When running `npm run tauri:dev`, do NOT manually start the backend - Tauri does it automatically.
+**Important:** `npm run tauri:dev` auto-starts backend - do NOT run `./run_backend.sh` manually.
 
-**Tauri Configuration:**
-- `frontend/src-tauri/tauri.conf.json`: Window settings, bundle config, backend resources
-- `frontend/src-tauri/Cargo.toml`: Rust dependencies (tauri-plugin-shell, port_scanner)
-- `frontend/src-tauri/capabilities/default.json`: Shell execution permissions
+**Config:** `tauri.conf.json` (window/bundle), `Cargo.toml` (deps), `capabilities/default.json` (shell perms)
 
 ## Key Development Notes
 
 **Field Naming:** Database uses French names (nom, duree, code_map, tips) - maintain consistency when adding fields
 
-**Testing:** Backend uses pytest with async support (`pytest-asyncio`). Tests in `backend/tests/` use FastAPI's TestClient with httpx for async requests.
+**Testing:** pytest + pytest-asyncio. Tests use FastAPI TestClient with httpx for async.
 
-**Timer Flow:** Backend timer uses asyncio.sleep() for step sequencing, but frontend implements client-side timer display for responsiveness (pause/resume handled client-side).
+**TypeScript:** `verbatimModuleSyntax` enabled - use `import type` for React types (ReactNode, FormEvent, etc).
 
-**CORS:** All origins allowed (`allow_origins=["*"]`) because API is localhost-only with no sensitive data. Required for Vite dev server, Tauri custom protocols, and different local ports.
+**Timer Flow:** Backend uses asyncio.sleep() sequencing; frontend has client-side display (pause/resume).
 
-**Step Ordering:** Steps have an `order` field (integer) that determines execution sequence. Order is set automatically when creating steps in sequence.
+**CORS:** `allow_origins=["*"]` - safe for localhost-only API. Required for Vite/Tauri protocols.
+
+**Step Ordering:** `order` field (int) determines execution sequence, set automatically on creation.
 
 ## Release & Distribution
 
-**Quick Release:** Run `./scripts/prepare-release.sh <version>` to bump versions and create git tag
+**Quick:** `./scripts/prepare-release.sh <version>` → bumps versions + creates tag
 
-**Manual Process:**
-1. Update versions in: `tauri.conf.json`, `Cargo.toml`, `frontend/package.json`, `docs/index.html`
-2. Create git tag matching `v*.*.*` pattern
-3. Push tag to trigger GitHub Actions release workflow
+**Manual:** Update `tauri.conf.json`, `Cargo.toml`, `package.json`, `docs/index.html` → create `v*.*.*` tag → push
 
-**Automated Build:**
-- `.github/workflows/release.yml`: Builds Windows MSI, Linux AppImage/DEB, macOS DMG
-- `.github/workflows/pages.yml`: Deploys download page to GitHub Pages
-- Draft releases created automatically in GitHub Releases
+**CI/CD:** `release.yml` builds Windows MSI/EXE on tag push. `pages.yml` deploys download page.
 
-**Distribution Formats:**
-- Windows: MSI installer (WiX Toolset required for local builds)
-- Linux: AppImage (portable) + DEB package
-- macOS: DMG (Intel + Apple Silicon)
+**Formats:** Windows (MSI+EXE) only (Linux/macOS builds disabled)
 
-See [docs/release/QUICK_RELEASE.md](docs/release/QUICK_RELEASE.md) or [docs/release/RELEASE.md](docs/release/RELEASE.md) for details.
+See [QUICK_RELEASE.md](docs/release/QUICK_RELEASE.md) or [RELEASE.md](docs/release/RELEASE.md).
 
 ## Project Status
 
