@@ -3,11 +3,15 @@ import { AuthProvider } from './contexts/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
+import VerifyEmail from './pages/VerifyEmail';
 import RoutinesList from './pages/RoutinesList';
 import CreateRoutine from './pages/CreateRoutine';
 import EditRoutine from './pages/EditRoutine';
 import PlayRoutine from './pages/PlayRoutine';
 import Community from './pages/Community';
+import Settings from './pages/Settings';
 
 function App() {
   return (
@@ -17,6 +21,9 @@ function App() {
           {/* Public routes */}
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/verify-email" element={<VerifyEmail />} />
 
           {/* Protected routes */}
           <Route
@@ -56,6 +63,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <Community />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/settings"
+            element={
+              <ProtectedRoute>
+                <Settings />
               </ProtectedRoute>
             }
           />

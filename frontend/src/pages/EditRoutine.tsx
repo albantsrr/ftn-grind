@@ -33,6 +33,7 @@ export default function EditRoutine() {
 
   useEffect(() => {
     loadRoutine();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   const loadRoutine = async () => {

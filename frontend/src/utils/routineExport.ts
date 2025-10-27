@@ -97,6 +97,7 @@ export function importRoutinesFromFile(): Promise<RoutineCreate[]> {
 /**
  * Validate routine structure
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function validateRoutineStructure(routine: any): void {
   if (!routine.nom || typeof routine.nom !== 'string') {
     throw new Error('Invalid routine: missing or invalid "nom" field');

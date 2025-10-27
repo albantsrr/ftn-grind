@@ -84,6 +84,8 @@ The backend uses a modular router pattern with SQLAlchemy ORM:
 ```
 users:
   - id, email, username, hashed_password, is_active, created_at
+  - is_verified (boolean), verification_token (text)
+  - reset_token (text), reset_token_expires (datetime)
 
 routines:
   - id, user_id (FK), nom, date, sound_type, volume, image_url
@@ -109,8 +111,14 @@ routine_ratings:
 
 *Authentication:*
 - `POST /api/auth/login`: Login with username/password (returns JWT)
-- `POST /api/auth/register`: Register new user
+- `POST /api/auth/register`: Register new user (sends verification email)
 - `GET /api/auth/me`: Get current user info
+- `POST /api/auth/verify-email`: Verify email with token
+- `POST /api/auth/resend-verification`: Resend verification email
+- `POST /api/auth/forgot-password`: Request password reset (sends email)
+- `POST /api/auth/reset-password`: Reset password with token
+- `PUT /api/auth/update-profile`: Update user profile
+- `POST /api/auth/change-password`: Change password (requires current password)
 
 *Routines (Protected):*
 - `GET /api/routines/`: List user's routines
@@ -146,11 +154,15 @@ Page-based routing structure:
 **Pages:**
 - `Login.tsx`: Login page (route: `/login`)
 - `Register.tsx`: Registration page (route: `/register`)
+- `ForgotPassword.tsx`: Password reset request (route: `/forgot-password`)
+- `ResetPassword.tsx`: New password form (route: `/reset-password?token=xxx`)
+- `VerifyEmail.tsx`: Email verification (route: `/verify-email?token=xxx`)
 - `RoutinesList.tsx`: Home page (route: `/`) - user's private routines
 - `CreateRoutine.tsx`: Create routine form (route: `/create`)
 - `EditRoutine.tsx`: Edit routine form (route: `/edit/:id`)
 - `PlayRoutine.tsx`: Timer execution player (route: `/play/:id`)
 - `Community.tsx`: Public routines with search/filters (route: `/community`)
+- `Settings.tsx`: User profile and settings (route: `/settings`)
 
 **Key Components:**
 - `RoutineCard.tsx`: Routine display card with actions
@@ -211,6 +223,14 @@ See [ENVIRONMENTS.md](frontend/ENVIRONMENTS.md).
 - **Pagination:** Community shows 12 routines per page with navigation controls.
 - **UX Polish:** Skeleton loaders, fade-in animations, tooltips, improved error messages.
 
+**Email & Account Management (Development Mode):**
+- **Email Verification:** Users receive verification email after registration. Tokens logged to console in dev mode.
+- **Password Reset:** "Forgot password" flow with email-based token reset. Reset links logged to console in dev mode.
+- **Profile Settings:** Users can update username, email, full name, and password in Settings page.
+- **Email Service:** Currently using console logging for dev. Production requires email service (SendGrid, AWS SES, etc.) configuration in `backend/email_utils.py`.
+- **Security:** 24-hour token expiration, bcrypt password hashing, protection against email enumeration.
+- **Migration:** Run `backend/scripts/migrate_add_email_verification.py` to add email fields to existing database.
+
 ## Release & Distribution
 
 **Quick:** `./scripts/prepare-release.sh <version>` → bumps versions + creates tag
@@ -227,6 +247,8 @@ See [QUICK_RELEASE.md](docs/release/QUICK_RELEASE.md) or [RELEASE.md](docs/relea
 
 **Current Features:**
 - ✅ User authentication (JWT-based login/register)
+- ✅ Email verification and password reset (dev mode - console logging)
+- ✅ User profile management (update email, username, password)
 - ✅ Private routine management (CRUD with steps)
 - ✅ Timer execution with sound alerts
 - ✅ Community system (share routines publicly)

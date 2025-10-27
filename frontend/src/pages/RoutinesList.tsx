@@ -71,7 +71,7 @@ export default function RoutinesList() {
     try {
       exportRoutine(routine);
       success(`✅ Routine "${routine.nom}" exportée`);
-    } catch (err) {
+    } catch {
       showError('❌ Erreur lors de l\'exportation');
     }
   };
@@ -85,14 +85,13 @@ export default function RoutinesList() {
       exportRoutines(routines);
       success(`✅ ${routines.length} routine(s) exportée(s)`);
       setShowActionsMenu(false);
-    } catch (err) {
+    } catch {
       showError('❌ Erreur lors de l\'exportation');
     }
   };
 
   const handleShare = async (id: number) => {
     try {
-      const routine = routines.find(r => r.id === id);
       await api.shareRoutine(id);
       await loadRoutines(); // Reload to get updated is_public status
 

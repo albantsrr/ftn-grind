@@ -142,7 +142,7 @@ export const api = {
   },
 
   // Start routine execution
-  async startRoutine(id: number): Promise<any> {
+  async startRoutine(id: number): Promise<unknown> {
     const response = await fetchWithAuth(`${API_URL}/api/timer/start-routine/${id}`, {
       method: 'POST',
       headers: getAuthHeaders(),
@@ -152,7 +152,7 @@ export const api = {
   },
 
   // Preview routine
-  async previewRoutine(id: number): Promise<any> {
+  async previewRoutine(id: number): Promise<unknown> {
     const response = await fetchWithAuth(`${API_URL}/api/timer/routine-preview/${id}`, {
       headers: getAuthHeaders(),
     });
@@ -270,5 +270,93 @@ export const api = {
       headers: getAuthHeaders(),
     });
     if (!response.ok) throw new Error('Failed to delete rating');
+  },
+
+  // ==================== Password Reset & Email Verification ====================
+
+  // Request password reset email
+  async forgotPassword(email: string): Promise<void> {
+    const response = await fetch(`${API_URL}/api/auth/forgot-password`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email }),
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || 'Failed to send password reset email');
+    }
+  },
+
+  // Reset password with token
+  async resetPassword(data: { token: string; new_password: string }): Promise<void> {
+    const response = await fetch(`${API_URL}/api/auth/reset-password`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || 'Failed to reset password');
+    }
+  },
+
+  // Verify email with token
+  async verifyEmail(data: { token: string }): Promise<void> {
+    const response = await fetch(`${API_URL}/api/auth/verify-email`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || 'Failed to verify email');
+    }
+  },
+
+  // Resend verification email
+  async resendVerificationEmail(): Promise<void> {
+    const response = await fetchWithAuth(`${API_URL}/api/auth/resend-verification`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || 'Failed to resend verification email');
+    }
+  },
+
+  // ==================== Profile Management ====================
+
+  // Update user profile
+  async updateProfile(data: { username?: string; email?: string; full_name?: string }): Promise<User> {
+    const response = await fetchWithAuth(`${API_URL}/api/auth/update-profile`, {
+      method: 'PUT',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || 'Failed to update profile');
+    }
+    return response.json();
+  },
+
+  // Change password
+  async changePassword(data: { current_password: string; new_password: string }): Promise<void> {
+    const response = await fetchWithAuth(`${API_URL}/api/auth/change-password`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || 'Failed to change password');
+    }
   },
 };

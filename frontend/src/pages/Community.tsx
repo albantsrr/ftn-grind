@@ -9,7 +9,6 @@ import RatingStars from '../components/RatingStars';
 import SearchBar from '../components/SearchBar';
 import FilterPanel from '../components/FilterPanel';
 import SkeletonCard from '../components/SkeletonCard';
-import Tooltip from '../components/Tooltip';
 import { useAuth } from '../contexts/AuthContext';
 
 export default function Community() {
@@ -23,7 +22,6 @@ export default function Community() {
   const [selectedTagIds, setSelectedTagIds] = useState<number[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(12);
-  const [totalItems, setTotalItems] = useState(0);
   const [showRatingModal, setShowRatingModal] = useState(false);
   const [selectedRoutine, setSelectedRoutine] = useState<Routine | null>(null);
   const [userRating, setUserRating] = useState<number>(0);
@@ -33,6 +31,7 @@ export default function Community() {
   // Load routines when filters change
   useEffect(() => {
     loadCommunityRoutines();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sortBy, searchQuery, selectedTagIds, currentPage]);
 
   // Reset to page 1 when filters change
@@ -43,7 +42,7 @@ export default function Community() {
   const loadCommunityRoutines = async () => {
     try {
       setLoading(true);
-      const params: any = {
+      const params: Record<string, string | number> = {
         sort_by: sortBy,
         limit: itemsPerPage,
         skip: (currentPage - 1) * itemsPerPage
@@ -59,7 +58,6 @@ export default function Community() {
 
       const data = await api.getCommunityRoutines(params);
       setRoutines(data);
-      setTotalItems(data.length);
       setError(null);
     } catch (err) {
       setError('Erreur lors du chargement des routines communautaires');
@@ -117,8 +115,9 @@ export default function Community() {
       await api.rateRoutine(selectedRoutine.id!, { rating });
       await loadCommunityRoutines();
       closeRatingModal();
-    } catch (err: any) {
-      setRatingError(err.message || 'Erreur lors de la notation');
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Erreur lors de la notation';
+      setRatingError(errorMessage);
       console.error(err);
     }
   };
@@ -147,7 +146,7 @@ export default function Community() {
       // Show success message and redirect to home
       alert('✅ Routine importée avec succès !');
       navigate('/');
-    } catch (err: any) {
+    } catch (err) {
       console.error('Failed to import routine:', err);
       alert('❌ Erreur lors de l\'importation de la routine');
     }
@@ -161,8 +160,9 @@ export default function Community() {
       await api.deleteRating(selectedRoutine.id!);
       await loadCommunityRoutines();
       closeRatingModal();
-    } catch (err: any) {
-      setRatingError(err.message || 'Erreur lors de la suppression de la note');
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Erreur lors de la suppression de la note';
+      setRatingError(errorMessage);
       console.error(err);
     }
   };

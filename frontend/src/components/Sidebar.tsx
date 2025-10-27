@@ -84,7 +84,7 @@ export default function Sidebar({ onLogout, username }: SidebarProps) {
           to="/settings"
           icon="⚙️"
           label="Settings"
-          disabled
+          active={location.pathname === '/settings'}
         />
       </nav>
 

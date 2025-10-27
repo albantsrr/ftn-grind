@@ -18,6 +18,7 @@ export default function PlayRoutine() {
 
   useEffect(() => {
     loadRoutine();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   useEffect(() => {
@@ -36,12 +37,14 @@ export default function PlayRoutine() {
     }
 
     return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isRunning, isPaused, timeRemaining]);
 
   useEffect(() => {
     if (timeRemaining === 0 && isRunning && !isPaused) {
       handleStepComplete();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [timeRemaining, isRunning, isPaused]);
 
   const loadRoutine = async () => {

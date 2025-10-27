@@ -24,6 +24,10 @@ class User(Base):
     hashed_password = Column(String, nullable=False)
     full_name = Column(String, nullable=True)
     is_active = Column(Boolean, default=True)
+    is_verified = Column(Boolean, default=False)  # Email verification status
+    verification_token = Column(String, nullable=True)  # Token for email verification
+    reset_token = Column(String, nullable=True)  # Token for password reset
+    reset_token_expires = Column(DateTime, nullable=True)  # Expiration for reset token
     created_at = Column(DateTime, default=datetime.utcnow)
 
     # Relationship with routines (one user has many routines)

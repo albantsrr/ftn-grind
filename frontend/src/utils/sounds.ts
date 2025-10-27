@@ -13,6 +13,7 @@ export const SOUND_TYPES: { value: SoundType; label: string; description: string
  * @param volume - Volume level (0-100)
  */
 export function playSound(soundType: SoundType = 'beep', volume: number = 30): void {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
   const gainNode = audioContext.createGain();
 
