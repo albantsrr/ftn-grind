@@ -1,17 +1,22 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import type { RoutineCreate, RoutineStep, SoundType } from '../types';
+import type { RoutineCreate, RoutineStep, SoundType, Tag } from '../types';
 import { api } from '../services/api';
 import ImageSelector from '../components/ImageSelector';
 import SoundSelector from '../components/SoundSelector';
 import StepCard from '../components/StepCard';
+import TagSelector from '../components/TagSelector';
+import Toast from '../components/Toast';
+import { useToast } from '../hooks/useToast';
 
 export default function CreateRoutine() {
   const navigate = useNavigate();
+  const { toasts, removeToast, success, error: showError } = useToast();
   const [routineName, setRoutineName] = useState('');
   const [soundType, setSoundType] = useState<SoundType>('beep');
   const [volume, setVolume] = useState(30);
   const [imageUrl, setImageUrl] = useState('/default_image.jpg');
+  const [selectedTags, setSelectedTags] = useState<Tag[]>([]);
   const [steps, setSteps] = useState<Omit<RoutineStep, 'id' | 'routine_id' | 'order'>[]>([
     { nom: '', code_map: '', duree: 60, tips: '' }
   ]);
@@ -114,11 +119,26 @@ export default function CreateRoutine() {
           tips: step.tips || undefined
         }))
       };
-      await api.createRoutine(routine);
-      navigate('/');
+      const createdRoutine = await api.createRoutine(routine);
+
+      // Add tags to the newly created routine
+      if (createdRoutine.id && selectedTags.length > 0) {
+        for (const tag of selectedTags) {
+          try {
+            await api.addTagToRoutine(createdRoutine.id, { nom: tag.nom, color: tag.color });
+          } catch (tagErr) {
+            console.error('Failed to add tag:', tag.nom, tagErr);
+            // Continue adding other tags even if one fails
+          }
+        }
+      }
+
+      success(`✅ Routine "${routineName}" créée avec succès`);
+      setTimeout(() => navigate('/'), 1000);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to create routine';
       setError(`Failed to create routine: ${errorMessage}`);
+      showError('❌ Erreur lors de la création de la routine');
       console.error('Error creating routine:', err);
     } finally {
       setLoading(false);
@@ -196,6 +216,11 @@ export default function CreateRoutine() {
           <ImageSelector
             currentImage={imageUrl}
             onImageChange={setImageUrl}
+          />
+
+          <TagSelector
+            selectedTags={selectedTags}
+            onTagsChange={setSelectedTags}
           />
         </div>
 
@@ -311,6 +336,16 @@ export default function CreateRoutine() {
           </div>
         </div>
       </div>
+
+      {/* Toast Notifications */}
+      {toasts.map((toast) => (
+        <Toast
+          key={toast.id}
+          message={toast.message}
+          type={toast.type}
+          onClose={() => removeToast(toast.id)}
+        />
+      ))}
     </div>
   );
 }

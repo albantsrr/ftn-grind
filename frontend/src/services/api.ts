@@ -1,4 +1,4 @@
-import type { Routine, RoutineCreate, LoginRequest, RegisterRequest, AuthResponse, User } from '../types';
+import type { Routine, RoutineCreate, LoginRequest, RegisterRequest, AuthResponse, User, Tag, TagCreate, RatingCreate, RoutineRatingInfo } from '../types';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
@@ -17,6 +17,29 @@ const getAuthHeaders = (): HeadersInit => {
     headers['Authorization'] = `Bearer ${token}`;
   }
   return headers;
+};
+
+// Helper to handle 401 errors (unauthorized)
+const handle401 = () => {
+  // Clear auth data from localStorage
+  localStorage.removeItem('fortiflow_token');
+  localStorage.removeItem('fortiflow_user');
+
+  // Redirect to login page
+  window.location.href = '/login';
+};
+
+// Enhanced fetch wrapper that handles 401 errors
+const fetchWithAuth = async (url: string, options: RequestInit = {}): Promise<Response> => {
+  const response = await fetch(url, options);
+
+  // If unauthorized, clear auth and redirect to login
+  if (response.status === 401) {
+    handle401();
+    throw new Error('Session expired. Please login again.');
+  }
+
+  return response;
 };
 
 export const api = {
@@ -61,7 +84,7 @@ export const api = {
 
   // Get current user
   async getCurrentUser(): Promise<User> {
-    const response = await fetch(`${API_URL}/api/auth/me`, {
+    const response = await fetchWithAuth(`${API_URL}/api/auth/me`, {
       headers: getAuthHeaders(),
     });
     if (!response.ok) throw new Error('Failed to get current user');
@@ -71,7 +94,7 @@ export const api = {
   // ==================== Routines ====================
   // Get all routines
   async getRoutines(): Promise<Routine[]> {
-    const response = await fetch(`${API_URL}/api/routines/`, {
+    const response = await fetchWithAuth(`${API_URL}/api/routines/`, {
       headers: getAuthHeaders(),
     });
     if (!response.ok) throw new Error('Failed to fetch routines');
@@ -80,7 +103,7 @@ export const api = {
 
   // Get routine by ID
   async getRoutine(id: number): Promise<Routine> {
-    const response = await fetch(`${API_URL}/api/routines/${id}`, {
+    const response = await fetchWithAuth(`${API_URL}/api/routines/${id}`, {
       headers: getAuthHeaders(),
     });
     if (!response.ok) throw new Error('Failed to fetch routine');
@@ -89,7 +112,7 @@ export const api = {
 
   // Create routine
   async createRoutine(routine: RoutineCreate): Promise<Routine> {
-    const response = await fetch(`${API_URL}/api/routines/`, {
+    const response = await fetchWithAuth(`${API_URL}/api/routines/`, {
       method: 'POST',
       headers: getAuthHeaders(),
       body: JSON.stringify(routine),
@@ -100,7 +123,7 @@ export const api = {
 
   // Update routine
   async updateRoutine(id: number, routine: Partial<RoutineCreate>): Promise<Routine> {
-    const response = await fetch(`${API_URL}/api/routines/${id}`, {
+    const response = await fetchWithAuth(`${API_URL}/api/routines/${id}`, {
       method: 'PUT',
       headers: getAuthHeaders(),
       body: JSON.stringify(routine),
@@ -111,7 +134,7 @@ export const api = {
 
   // Delete routine
   async deleteRoutine(id: number): Promise<void> {
-    const response = await fetch(`${API_URL}/api/routines/${id}`, {
+    const response = await fetchWithAuth(`${API_URL}/api/routines/${id}`, {
       method: 'DELETE',
       headers: getAuthHeaders(),
     });
@@ -120,7 +143,7 @@ export const api = {
 
   // Start routine execution
   async startRoutine(id: number): Promise<any> {
-    const response = await fetch(`${API_URL}/api/timer/start-routine/${id}`, {
+    const response = await fetchWithAuth(`${API_URL}/api/timer/start-routine/${id}`, {
       method: 'POST',
       headers: getAuthHeaders(),
     });
@@ -130,10 +153,122 @@ export const api = {
 
   // Preview routine
   async previewRoutine(id: number): Promise<any> {
-    const response = await fetch(`${API_URL}/api/timer/routine-preview/${id}`, {
+    const response = await fetchWithAuth(`${API_URL}/api/timer/routine-preview/${id}`, {
       headers: getAuthHeaders(),
     });
     if (!response.ok) throw new Error('Failed to preview routine');
     return response.json();
+  },
+
+  // ==================== Community ====================
+
+  // Get all public routines from community
+  async getCommunityRoutines(params?: {
+    skip?: number;
+    limit?: number;
+    sort_by?: 'date' | 'nom' | 'rating';
+    search?: string;
+    author?: string;
+    tags?: string; // Comma-separated tag IDs
+  }): Promise<Routine[]> {
+    const queryParams = new URLSearchParams();
+    if (params?.skip !== undefined) queryParams.append('skip', params.skip.toString());
+    if (params?.limit !== undefined) queryParams.append('limit', params.limit.toString());
+    if (params?.sort_by) queryParams.append('sort_by', params.sort_by);
+    if (params?.search) queryParams.append('search', params.search);
+    if (params?.author) queryParams.append('author', params.author);
+    if (params?.tags) queryParams.append('tags', params.tags);
+
+    const url = `${API_URL}/api/community/routines${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
+    const response = await fetchWithAuth(url, {
+      headers: getAuthHeaders(),
+    });
+    if (!response.ok) throw new Error('Failed to fetch community routines');
+    return response.json();
+  },
+
+  // Toggle routine share status (public/private)
+  async shareRoutine(id: number): Promise<Routine> {
+    const response = await fetchWithAuth(`${API_URL}/api/community/routines/${id}/share`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+    });
+    if (!response.ok) throw new Error('Failed to share routine');
+    return response.json();
+  },
+
+  // ==================== Tags ====================
+
+  // Get all tags
+  async getTags(): Promise<Tag[]> {
+    const response = await fetchWithAuth(`${API_URL}/api/tags/`, {
+      headers: getAuthHeaders(),
+    });
+    if (!response.ok) throw new Error('Failed to fetch tags');
+    return response.json();
+  },
+
+  // Create a new tag
+  async createTag(tag: TagCreate): Promise<Tag> {
+    const response = await fetchWithAuth(`${API_URL}/api/tags/`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(tag),
+    });
+    if (!response.ok) throw new Error('Failed to create tag');
+    return response.json();
+  },
+
+  // Add tag to routine
+  async addTagToRoutine(routineId: number, tag: TagCreate): Promise<Tag> {
+    const response = await fetchWithAuth(`${API_URL}/api/tags/routines/${routineId}/tags`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(tag),
+    });
+    if (!response.ok) throw new Error('Failed to add tag to routine');
+    return response.json();
+  },
+
+  // Remove tag from routine
+  async removeTagFromRoutine(routineId: number, tagId: number): Promise<void> {
+    const response = await fetchWithAuth(`${API_URL}/api/tags/routines/${routineId}/tags/${tagId}`, {
+      method: 'DELETE',
+      headers: getAuthHeaders(),
+    });
+    if (!response.ok) throw new Error('Failed to remove tag from routine');
+  },
+
+  // ==================== Ratings ====================
+
+  // Rate a routine (1-5 stars)
+  async rateRoutine(routineId: number, ratingData: RatingCreate): Promise<void> {
+    const response = await fetchWithAuth(`${API_URL}/api/ratings/routines/${routineId}/rate`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(ratingData),
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || 'Failed to rate routine');
+    }
+  },
+
+  // Get rating info for a routine (average, total, user's rating)
+  async getRoutineRating(routineId: number): Promise<RoutineRatingInfo> {
+    const response = await fetchWithAuth(`${API_URL}/api/ratings/routines/${routineId}/rating`, {
+      headers: getAuthHeaders(),
+    });
+    if (!response.ok) throw new Error('Failed to get routine rating');
+    return response.json();
+  },
+
+  // Delete user's rating for a routine
+  async deleteRating(routineId: number): Promise<void> {
+    const response = await fetchWithAuth(`${API_URL}/api/ratings/routines/${routineId}/rate`, {
+      method: 'DELETE',
+      headers: getAuthHeaders(),
+    });
+    if (!response.ok) throw new Error('Failed to delete rating');
   },
 };

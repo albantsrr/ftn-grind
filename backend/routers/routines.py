@@ -71,7 +71,9 @@ def create_routine(
         nom=routine_data.nom,
         sound_type=routine_data.sound_type,
         volume=routine_data.volume,
-        image_url=routine_data.image_url
+        image_url=routine_data.image_url,
+        is_public=routine_data.is_public,
+        author_name=routine_data.author_name or current_user.username
     )
     db.add(new_routine)
     db.flush()  # Get the routine ID before committing
@@ -129,6 +131,10 @@ def update_routine(
         routine.volume = routine_data.volume
     if routine_data.image_url is not None:
         routine.image_url = routine_data.image_url
+    if routine_data.is_public is not None:
+        routine.is_public = routine_data.is_public
+    if routine_data.author_name is not None:
+        routine.author_name = routine_data.author_name
 
     # Update steps if provided
     if routine_data.steps is not None:

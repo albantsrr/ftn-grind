@@ -1,21 +1,26 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link, useParams } from 'react-router-dom';
-import type { Routine, RoutineCreate, RoutineStep, SoundType } from '../types';
+import type { Routine, RoutineCreate, RoutineStep, SoundType, Tag } from '../types';
 import { api } from '../services/api';
 import { exportRoutine } from '../utils/routineExport';
 import ImageSelector from '../components/ImageSelector';
 import SoundSelector from '../components/SoundSelector';
 import StepCard from '../components/StepCard';
+import TagSelector from '../components/TagSelector';
+import Toast from '../components/Toast';
+import { useToast } from '../hooks/useToast';
 
 type StepInput = Omit<RoutineStep, 'id' | 'routine_id' | 'order'>;
 
 export default function EditRoutine() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { toasts, removeToast, success, error: showError } = useToast();
   const [routineName, setRoutineName] = useState('');
   const [soundType, setSoundType] = useState<SoundType>('beep');
   const [volume, setVolume] = useState(30);
   const [imageUrl, setImageUrl] = useState('/default_image.jpg');
+  const [selectedTags, setSelectedTags] = useState<Tag[]>([]);
   const [steps, setSteps] = useState<StepInput[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -39,6 +44,7 @@ export default function EditRoutine() {
       setImageUrl(routine.image_url || '/default_image.jpg');
       setSoundType(routine.sound_type || 'beep');
       setVolume(routine.volume || 30);
+      setSelectedTags(routine.tags || []);
       setSteps(routine.steps.map(step => ({
         nom: step.nom,
         code_map: step.code_map,
@@ -153,10 +159,12 @@ export default function EditRoutine() {
         }))
       };
       await api.updateRoutine(Number(id), routineData);
-      navigate('/');
+      success(`✅ Routine "${routineName}" mise à jour avec succès`);
+      setTimeout(() => navigate('/'), 1000);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to update routine';
       setError(`Failed to update routine: ${errorMessage}`);
+      showError('❌ Erreur lors de la mise à jour de la routine');
       console.error('Error updating routine:', err);
     } finally {
       setSaving(false);
@@ -259,6 +267,12 @@ export default function EditRoutine() {
           <ImageSelector
             currentImage={imageUrl}
             onImageChange={setImageUrl}
+          />
+
+          <TagSelector
+            selectedTags={selectedTags}
+            onTagsChange={setSelectedTags}
+            routineId={Number(id)}
           />
         </div>
 
@@ -374,6 +388,16 @@ export default function EditRoutine() {
           </div>
         </div>
       </div>
+
+      {/* Toast Notifications */}
+      {toasts.map((toast) => (
+        <Toast
+          key={toast.id}
+          message={toast.message}
+          type={toast.type}
+          onClose={() => removeToast(toast.id)}
+        />
+      ))}
     </div>
   );
 }

@@ -63,6 +63,12 @@ export default function Sidebar({ onLogout, username }: SidebarProps) {
           active={location.pathname === '/'}
         />
         <NavItem
+          to="/community"
+          icon="🌐"
+          label="Community"
+          active={location.pathname === '/community'}
+        />
+        <NavItem
           to="/maps"
           icon="🗺️"
           label="Popular Maps"

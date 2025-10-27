@@ -6,11 +6,14 @@ import { exportRoutine, exportRoutines, importRoutinesFromFile } from '../utils/
 import ThemeToggle from '../components/ThemeToggle';
 import Sidebar from '../components/Sidebar';
 import RoutineCard from '../components/RoutineCard';
+import Toast from '../components/Toast';
 import { useAuth } from '../contexts/AuthContext';
+import { useToast } from '../hooks/useToast';
 
 export default function RoutinesList() {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
+  const { toasts, removeToast, success, error: showError } = useToast();
   const [routines, setRoutines] = useState<Routine[]>([]);
   const [filteredRoutines, setFilteredRoutines] = useState<Routine[]>([]);
   const [loading, setLoading] = useState(true);
@@ -57,23 +60,53 @@ export default function RoutinesList() {
     try {
       await api.deleteRoutine(id);
       await loadRoutines();
+      success('✅ Routine supprimée avec succès');
     } catch (err) {
-      alert('Failed to delete routine');
+      showError('❌ Erreur lors de la suppression de la routine');
       console.error(err);
     }
   };
 
   const handleExportRoutine = (routine: Routine) => {
-    exportRoutine(routine);
+    try {
+      exportRoutine(routine);
+      success(`✅ Routine "${routine.nom}" exportée`);
+    } catch (err) {
+      showError('❌ Erreur lors de l\'exportation');
+    }
   };
 
   const handleExportAll = () => {
     if (routines.length === 0) {
-      alert('No routines to export');
+      showError('❌ Aucune routine à exporter');
       return;
     }
-    exportRoutines(routines);
-    setShowActionsMenu(false);
+    try {
+      exportRoutines(routines);
+      success(`✅ ${routines.length} routine(s) exportée(s)`);
+      setShowActionsMenu(false);
+    } catch (err) {
+      showError('❌ Erreur lors de l\'exportation');
+    }
+  };
+
+  const handleShare = async (id: number) => {
+    try {
+      const routine = routines.find(r => r.id === id);
+      await api.shareRoutine(id);
+      await loadRoutines(); // Reload to get updated is_public status
+
+      // Check new status
+      const updatedRoutine = await api.getRoutine(id);
+      if (updatedRoutine.is_public) {
+        success('✅ Routine partagée avec la communauté');
+      } else {
+        success('✅ Routine retirée de la communauté');
+      }
+    } catch (err) {
+      showError('❌ Erreur lors du partage de la routine');
+      console.error(err);
+    }
   };
 
   const handleImport = async () => {
@@ -96,9 +129,9 @@ export default function RoutinesList() {
       await loadRoutines();
 
       if (failCount === 0) {
-        alert(`Successfully imported ${successCount} routine(s)`);
+        success(`✅ ${successCount} routine(s) importée(s) avec succès`);
       } else {
-        alert(`Imported ${successCount} routine(s), failed to import ${failCount} routine(s)`);
+        showError(`⚠️ ${successCount} importée(s), ${failCount} échouée(s)`);
       }
       setShowActionsMenu(false);
     } catch (err) {
@@ -272,6 +305,7 @@ export default function RoutinesList() {
                   routine={routine}
                   onDelete={handleDelete}
                   onExport={handleExportRoutine}
+                  onShare={handleShare}
                 />
               ))}
             </div>
@@ -297,6 +331,16 @@ export default function RoutinesList() {
           onClick={() => setShowActionsMenu(false)}
         />
       )}
+
+      {/* Toast Notifications */}
+      {toasts.map((toast) => (
+        <Toast
+          key={toast.id}
+          message={toast.message}
+          type={toast.type}
+          onClose={() => removeToast(toast.id)}
+        />
+      ))}
     </div>
   );
 }

@@ -99,6 +99,15 @@ export default function PlayRoutine() {
     setIsPaused(true);
   };
 
+  const handlePreviousStep = () => {
+    if (!routine || currentStepIndex <= 0) return;
+    playBeep();
+    const prevIndex = currentStepIndex - 1;
+    setCurrentStepIndex(prevIndex);
+    setTimeRemaining(routine.steps[prevIndex].duree);
+    setIsPaused(true);
+  };
+
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -273,7 +282,7 @@ export default function PlayRoutine() {
 
               <div className="space-y-3">
                 {routine.steps.map((step, index) => (
-                  <div key={index} className="group border-2 border-gray-200 dark:border-gray-600 hover:border-indigo-400 dark:hover:border-indigo-500 rounded-xl p-5 transition-all hover:shadow-md bg-white dark:bg-gray-750">
+                  <div key={index} className="group border-2 border-gray-200 dark:border-gray-600 hover:border-indigo-400 dark:hover:border-indigo-500 rounded-xl p-5 transition-all hover:shadow-md bg-gray-50 dark:bg-gray-700">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
@@ -286,7 +295,7 @@ export default function PlayRoutine() {
                         </div>
 
                         <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300 ml-11">
-                          <svg className="w-5 h-5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <svg className="w-5 h-5 text-indigo-500 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
                           </svg>
                           <span className="font-mono font-semibold">{step.code_map}</span>
@@ -454,6 +463,20 @@ export default function PlayRoutine() {
 
           {/* Action Buttons */}
           <div className="flex flex-wrap gap-3 justify-center">
+            {/* Previous Step Button */}
+            {currentStepIndex > 0 && (
+              <button
+                onClick={handlePreviousStep}
+                className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-4 rounded-xl font-bold transition-all shadow-lg hover:shadow-xl text-lg"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
+                </svg>
+                <span>Previous Step</span>
+              </button>
+            )}
+
+            {/* Pause/Resume Button */}
             <button
               onClick={handlePause}
               className={`flex items-center gap-2 px-8 py-4 rounded-xl font-bold transition-all shadow-lg hover:shadow-xl text-lg ${
@@ -480,6 +503,7 @@ export default function PlayRoutine() {
               )}
             </button>
 
+            {/* Next Step Button */}
             {currentStepIndex < routine.steps.length - 1 && (
               <button
                 onClick={handleNextStep}
@@ -492,6 +516,7 @@ export default function PlayRoutine() {
               </button>
             )}
 
+            {/* Exit Button */}
             <Link
               to="/"
               className="flex items-center gap-2 bg-gray-500 hover:bg-gray-600 text-white px-8 py-4 rounded-xl font-bold transition-all shadow-lg hover:shadow-xl text-lg"
