@@ -15,6 +15,7 @@ export default function PlayRoutine() {
   const [isPaused, setIsPaused] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
   const [copiedCode, setCopiedCode] = useState(false);
+  const [autoPlay, setAutoPlay] = useState(true);
 
   useEffect(() => {
     loadRoutine();
@@ -79,7 +80,8 @@ export default function PlayRoutine() {
     if (!routine) return;
 
     if (currentStepIndex < routine.steps.length - 1) {
-      setIsPaused(true);
+      // If autoPlay is enabled, don't pause between steps
+      setIsPaused(!autoPlay);
       const nextIndex = currentStepIndex + 1;
       setCurrentStepIndex(nextIndex);
       setTimeRemaining(routine.steps[nextIndex].duree);
@@ -324,6 +326,43 @@ export default function PlayRoutine() {
               </div>
             </div>
 
+            {/* Auto-Play Option */}
+            <div className="mb-6 bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 border-2 border-indigo-200 dark:border-indigo-700 rounded-xl p-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 bg-indigo-100 dark:bg-indigo-900/40 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <svg className="w-7 h-7 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1">
+                      Auto-Play Mode
+                    </h3>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
+                      {autoPlay
+                        ? "Steps will automatically continue without pausing. You can still manually pause or skip steps during training."
+                        : "You'll need to press Resume after each step completes to continue to the next one."}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setAutoPlay(!autoPlay)}
+                  className={`relative inline-flex h-8 w-16 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 flex-shrink-0 ${
+                    autoPlay ? 'bg-indigo-600' : 'bg-gray-300 dark:bg-gray-600'
+                  }`}
+                  role="switch"
+                  aria-checked={autoPlay}
+                >
+                  <span
+                    className={`inline-block h-6 w-6 transform rounded-full bg-white transition-transform ${
+                      autoPlay ? 'translate-x-9' : 'translate-x-1'
+                    }`}
+                  />
+                </button>
+              </div>
+            </div>
+
             {/* Start Button */}
             <button
               onClick={startRoutine}
@@ -373,6 +412,17 @@ export default function PlayRoutine() {
               </svg>
               {formatTime(totalRemaining)} total remaining
             </span>
+            {autoPlay && (
+              <>
+                <div className="w-1 h-4 bg-white/50 rounded-full"></div>
+                <span className="flex items-center gap-2">
+                  <svg className="w-4 h-4 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                  Auto-Play ON
+                </span>
+              </>
+            )}
           </div>
         </div>
 

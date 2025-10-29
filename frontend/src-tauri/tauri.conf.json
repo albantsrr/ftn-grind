@@ -45,9 +45,6 @@
       "certificateThumbprint": null,
       "digestAlgorithm": "sha256",
       "timestampUrl": ""
-    },
-    "resources": [
-      "backend"
-    ]
+    }
   }
 }
