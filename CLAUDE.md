@@ -187,17 +187,19 @@ See [ENVIRONMENTS.md](frontend/ENVIRONMENTS.md).
 
 ### Tauri Desktop Integration
 
-**Critical Architecture Detail:** Tauri automatically manages the backend process lifecycle.
+**Critical Architecture Detail:** The Tauri desktop application connects to the cloud backend API (NO local backend).
 
-**Backend Auto-Start ([lib.rs](frontend/src-tauri/src/lib.rs)):**
-1. Checks port 3000 availability
-2. Locates backend: Dev (`../../backend` + system Python) | Prod (bundled + embedded Python 3.12.7)
-3. Creates venv, installs deps, starts uvicorn on localhost:3000
-4. Kills backend on app close
+**Production Architecture:**
+- Tauri app is a lightweight desktop wrapper around the React frontend
+- All API calls go to `http://72.61.166.22` (VPS backend)
+- No embedded Python or local backend process
+- Requires internet connection to function
 
-**Important:** `npm run tauri:dev` auto-starts backend - do NOT run `./run_backend.sh` manually.
+**Development vs Production:**
+- Dev (`npm run tauri:dev`): Frontend connects to `http://localhost:3000` (local backend for testing)
+- Prod (`npm run tauri:build`): Frontend connects to `http://72.61.166.22` (VPS backend)
 
-**Config:** `tauri.conf.json` (window/bundle), `Cargo.toml` (deps), `capabilities/default.json` (shell perms)
+**Config:** `tauri.conf.json` (window/bundle), `Cargo.toml` (deps), `.env.production` (API URL)
 
 ## Key Development Notes
 
@@ -223,11 +225,13 @@ See [ENVIRONMENTS.md](frontend/ENVIRONMENTS.md).
 - **Pagination:** Community shows 12 routines per page with navigation controls.
 - **UX Polish:** Skeleton loaders, fade-in animations, tooltips, improved error messages.
 
-**Email & Account Management (Development Mode):**
-- **Email Verification:** Users receive verification email after registration. Tokens logged to console in dev mode.
-- **Password Reset:** "Forgot password" flow with email-based token reset. Reset links logged to console in dev mode.
+**Email & Account Management:**
+- **Email Verification:** Users receive verification email after registration via SendGrid in production.
+- **Password Reset:** "Forgot password" flow with email-based token reset.
 - **Profile Settings:** Users can update username, email, full name, and password in Settings page.
-- **Email Service:** Currently using console logging for dev. Production requires email service (SendGrid, AWS SES, etc.) configuration in `backend/email_utils.py`.
+- **Email Service:** Uses SendGrid API in production (configured via environment variables), console logging in dev.
+- **Configuration:** Set `USE_REAL_EMAIL=true` and `SENDGRID_API_KEY` in backend `.env` file.
+- **Email Templates:** Professional HTML emails with FortiFlow branding in `backend/email_utils.py`.
 - **Security:** 24-hour token expiration, bcrypt password hashing, protection against email enumeration.
 - **Migration:** Run `backend/scripts/migrate_add_email_verification.py` to add email fields to existing database.
 
@@ -258,8 +262,31 @@ See [QUICK_RELEASE.md](docs/release/QUICK_RELEASE.md) or [RELEASE.md](docs/relea
 - ✅ Pagination & UX polish (skeleton loaders, animations, tooltips)
 - ✅ Desktop app (Tauri v2) with automated releases
 
-**Planned:** V1 (user licensing) → V2 (cloud sync, PostgreSQL) → V3 (React Native mobile app)
+**Planned:** V1 (user licensing) → V2 (domain + HTTPS) → V3 (React Native mobile app)
+
+**Recent Updates:**
+- ✅ Auto-play feature for seamless routine execution (no manual resume between steps)
+- ✅ SendGrid email integration for production-ready email verification
+- ✅ Simplified Tauri architecture (cloud-only, no local backend)
+- ✅ Production deployment ready with full VPS integration
 
 ## Testing
 
-See [TEST_COMMUNITY_FEATURES.md](TEST_COMMUNITY_FEATURES.md) for comprehensive test plan covering all community features (sharing, tags, ratings, search/filters, UX improvements).
+**Test Framework:** pytest with pytest-asyncio for async support. Tests use FastAPI TestClient with httpx.
+
+**Running Tests:**
+```bash
+cd backend
+pytest                    # All tests
+pytest tests/test_*.py   # Specific file
+pytest -v -s             # Verbose with output
+pytest --cov             # With coverage
+```
+
+**Test Documentation:**
+- [TEST_COMMUNITY_FEATURES.md](TEST_COMMUNITY_FEATURES.md) - Comprehensive manual test plan for community features
+- [TESTING_GUIDE.md](TESTING_GUIDE.md) - Testing procedures and guidelines
+- [COMMUNITY_FEATURES_SUMMARY.md](COMMUNITY_FEATURES_SUMMARY.md) - Feature implementation summary
+- [UX_IMPROVEMENTS_COMMUNITY.md](UX_IMPROVEMENTS_COMMUNITY.md) - UX/UI enhancement documentation
+
+**Important:** Before testing new features, restart backend to apply schema changes: `Ctrl+C` then `./run_backend.sh`

@@ -5,7 +5,8 @@ Run this script to update existing database schema.
 import sqlite3
 from pathlib import Path
 
-DB_PATH = Path(__file__).parent / "fortiflow.db"
+# Database is at backend/fortiflow.db (one level up from scripts/)
+DB_PATH = Path(__file__).parent.parent / "fortiflow.db"
 
 def migrate():
     """Add new columns to users table for email verification and password reset."""

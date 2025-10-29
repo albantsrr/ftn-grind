@@ -42,3 +42,4 @@ fi
 echo ""
 echo "📋 Derniers logs du backend:"
 ssh ${VPS_USER}@${VPS_IP} "cd ${VPS_PATH} && docker compose logs --tail=10 backend"
+    
