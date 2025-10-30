@@ -1,0 +1,323 @@
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
+import { api } from '../services/api';
+import Sidebar from '../components/Sidebar';
+import ThemeToggle from '../components/ThemeToggle';
+import PaywallModal from '../components/PaywallModal';
+import type { UserStats, ChartData } from '../types';
+
+export default function Statistics() {
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
+  const [stats, setStats] = useState<UserStats | null>(null);
+  const [chartData, setChartData] = useState<ChartData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [showPaywall, setShowPaywall] = useState(false);
+
+  const isPremium = user?.subscription_tier === 'premium';
+
+  // Check Premium access on mount
+  useEffect(() => {
+    if (!isPremium) {
+      setShowPaywall(true);
+    }
+  }, [isPremium]);
+
+  // Load statistics data
+  useEffect(() => {
+    if (isPremium) {
+      loadStatistics();
+    } else {
+      // For Free users, immediately stop loading to show paywall
+      setLoading(false);
+    }
+  }, [isPremium]);
+
+  const loadStatistics = async () => {
+    try {
+      setLoading(true);
+      const [statsData, chartsData] = await Promise.all([
+        api.getUserStats(),
+        api.getChartData()
+      ]);
+      setStats(statsData);
+      setChartData(chartsData);
+      setError(null);
+    } catch (err) {
+      console.error('Failed to load statistics:', err);
+      setError('Erreur lors du chargement des statistiques');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
+
+  const formatDuration = (seconds: number): string => {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+
+    if (hours > 0) {
+      return `${hours}h ${minutes}m`;
+    }
+    return `${minutes}m`;
+  };
+
+  const getGradeColor = (grade: string): string => {
+    const colors: Record<string, string> = {
+      'Bronze': 'from-orange-400 to-orange-600',
+      'Silver': 'from-gray-300 to-gray-500',
+      'Gold': 'from-yellow-400 to-yellow-600',
+      'Platinum': 'from-cyan-400 to-cyan-600',
+      'Diamond': 'from-blue-400 to-blue-600',
+      'Legend': 'from-purple-500 to-pink-600'
+    };
+    return colors[grade] || 'from-gray-400 to-gray-600';
+  };
+
+  const getGradeEmoji = (grade: string): string => {
+    const emojis: Record<string, string> = {
+      'Bronze': '🥉',
+      'Silver': '🥈',
+      'Gold': '🥇',
+      'Platinum': '💎',
+      'Diamond': '💠',
+      'Legend': '🏆'
+    };
+    return emojis[grade] || '🎯';
+  };
+
+  // Don't show loading screen if user is Free tier (paywall will be shown)
+  if (loading && isPremium) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-gray-900 dark:to-gray-800">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-indigo-600 mx-auto mb-4"></div>
+          <p className="text-gray-600 dark:text-gray-300 text-lg">Chargement des statistiques...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex h-screen bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-gray-900 dark:to-gray-800 overflow-hidden">
+      {/* Paywall Modal */}
+      <PaywallModal isOpen={showPaywall} onClose={() => navigate('/')} feature="Statistics" />
+
+      {/* Sidebar */}
+      <Sidebar onLogout={handleLogout} username={user?.username || 'User'} subscriptionTier={user?.subscription_tier} />
+
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Header */}
+        <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-8 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              {/* Stats Icon */}
+              <div className="w-12 h-12 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
+                <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+              </div>
+
+              <div>
+                <h2 className="text-3xl font-bold text-gray-900 dark:text-white">Statistiques</h2>
+                <p className="text-gray-600 dark:text-gray-400 mt-1">
+                  Suivez votre progression et vos performances
+                </p>
+              </div>
+            </div>
+
+            <ThemeToggle />
+          </div>
+        </header>
+
+        {/* Content Area */}
+        <div className="flex-1 overflow-y-auto">
+          <div className="max-w-7xl mx-auto px-8 py-6">
+            {error ? (
+              <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-lg border border-red-200 dark:border-red-800">
+                <p className="text-red-600 dark:text-red-400">{error}</p>
+                <button
+                  onClick={loadStatistics}
+                  className="mt-4 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors"
+                >
+                  Réessayer
+                </button>
+              </div>
+            ) : stats ? (
+              <div className="space-y-6">
+                {/* Grade Card */}
+                <div className={`bg-gradient-to-r ${getGradeColor(stats.grade)} rounded-xl shadow-2xl p-8 text-white`}>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-white/80 text-sm font-medium mb-2">Votre grade actuel</p>
+                      <h3 className="text-5xl font-bold flex items-center gap-3">
+                        <span>{getGradeEmoji(stats.grade)}</span>
+                        <span>{stats.grade}</span>
+                      </h3>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-white/80 text-sm font-medium mb-2">Série actuelle</p>
+                      <p className="text-4xl font-bold">{stats.current_streak} 🔥</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Stats Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {/* Total Routines */}
+                  <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
+                    <div className="flex items-center gap-4">
+                      <div className="w-14 h-14 bg-green-100 dark:bg-green-900/30 rounded-xl flex items-center justify-center">
+                        <svg className="w-8 h-8 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </div>
+                      <div>
+                        <p className="text-gray-600 dark:text-gray-400 text-sm font-medium">Routines complétées</p>
+                        <p className="text-3xl font-bold text-gray-900 dark:text-white">{stats.total_routines_completed}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Total Time */}
+                  <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
+                    <div className="flex items-center gap-4">
+                      <div className="w-14 h-14 bg-blue-100 dark:bg-blue-900/30 rounded-xl flex items-center justify-center">
+                        <svg className="w-8 h-8 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </div>
+                      <div>
+                        <p className="text-gray-600 dark:text-gray-400 text-sm font-medium">Temps total</p>
+                        <p className="text-3xl font-bold text-gray-900 dark:text-white">{formatDuration(stats.total_time_seconds)}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Longest Streak */}
+                  <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
+                    <div className="flex items-center gap-4">
+                      <div className="w-14 h-14 bg-orange-100 dark:bg-orange-900/30 rounded-xl flex items-center justify-center">
+                        <svg className="w-8 h-8 text-orange-600 dark:text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.879 16.121A3 3 0 1012.015 11L11 14H9c0 .768.293 1.536.879 2.121z" />
+                        </svg>
+                      </div>
+                      <div>
+                        <p className="text-gray-600 dark:text-gray-400 text-sm font-medium">Meilleure série</p>
+                        <p className="text-3xl font-bold text-gray-900 dark:text-white">{stats.longest_streak} jours</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Chart Section */}
+                {chartData && chartData.last_30_days && chartData.last_30_days.length > 0 && (
+                  <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
+                    <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-6">Activité des 30 derniers jours</h3>
+
+                    {/* Simple Bar Chart */}
+                    <div className="space-y-3">
+                      {chartData.last_30_days.slice(-14).map((dataPoint, index) => {
+                        const maxCount = Math.max(...chartData.last_30_days.map(d => d.count));
+                        const percentage = maxCount > 0 ? (dataPoint.count / maxCount) * 100 : 0;
+
+                        return (
+                          <div key={index} className="flex items-center gap-4">
+                            <div className="w-24 text-sm text-gray-600 dark:text-gray-400">
+                              {new Date(dataPoint.date).toLocaleDateString('fr-FR', { month: 'short', day: 'numeric' })}
+                            </div>
+                            <div className="flex-1 bg-gray-100 dark:bg-gray-700 rounded-full h-8 relative overflow-hidden">
+                              <div
+                                className="absolute inset-y-0 left-0 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full transition-all"
+                                style={{ width: `${percentage}%` }}
+                              />
+                              <div className="absolute inset-0 flex items-center px-4">
+                                <span className="text-sm font-medium text-gray-900 dark:text-white">
+                                  {dataPoint.count} routine{dataPoint.count !== 1 ? 's' : ''} · {formatDuration(dataPoint.duration)}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Grade Progress */}
+                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-6">Système de grades</h3>
+
+                  <div className="space-y-4">
+                    {[
+                      { name: 'Bronze', emoji: '🥉', routines: 5, streak: 3 },
+                      { name: 'Silver', emoji: '🥈', routines: 20, streak: 7 },
+                      { name: 'Gold', emoji: '🥇', routines: 50, streak: 15 },
+                      { name: 'Platinum', emoji: '💎', routines: 100, streak: 30 },
+                      { name: 'Diamond', emoji: '💠', routines: 250, streak: 60 },
+                      { name: 'Legend', emoji: '🏆', routines: 500, streak: 100 }
+                    ].map((grade) => {
+                      const isCurrentGrade = stats.grade === grade.name;
+                      const hasAchieved = stats.total_routines_completed >= grade.routines && stats.longest_streak >= grade.streak;
+
+                      return (
+                        <div
+                          key={grade.name}
+                          className={`flex items-center justify-between p-4 rounded-lg border-2 ${
+                            isCurrentGrade
+                              ? 'border-indigo-500 dark:border-indigo-400 bg-indigo-50 dark:bg-indigo-900/20'
+                              : hasAchieved
+                              ? 'border-green-500 dark:border-green-400 bg-green-50 dark:bg-green-900/20'
+                              : 'border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/20'
+                          }`}
+                        >
+                          <div className="flex items-center gap-3">
+                            <span className="text-3xl">{grade.emoji}</span>
+                            <div>
+                              <p className="font-bold text-gray-900 dark:text-white">{grade.name}</p>
+                              <p className="text-sm text-gray-600 dark:text-gray-400">
+                                {grade.routines} routines · {grade.streak} jours de série
+                              </p>
+                            </div>
+                          </div>
+                          {isCurrentGrade && (
+                            <span className="px-3 py-1 bg-indigo-600 text-white rounded-full text-sm font-semibold">
+                              Actuel
+                            </span>
+                          )}
+                          {hasAchieved && !isCurrentGrade && (
+                            <span className="text-green-600 dark:text-green-400">
+                              <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                              </svg>
+                            </span>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-lg">
+                <div className="text-6xl mb-4">📊</div>
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Aucune donnée disponible</h2>
+                <p className="text-gray-600 dark:text-gray-400">
+                  Commencez à utiliser l'application pour voir vos statistiques !
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

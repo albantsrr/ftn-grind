@@ -1,9 +1,10 @@
-from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey, Boolean, Table, Float, UniqueConstraint
+from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey, Boolean, Table, Float, UniqueConstraint, Enum
 from sqlalchemy.orm import relationship
 from datetime import datetime
 from database import Base
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 from typing import List, Optional
+import enum
 
 # SQLAlchemy ORM Models
 
@@ -14,6 +15,18 @@ routine_tags = Table(
     Column('routine_id', Integer, ForeignKey('routines.id', ondelete='CASCADE'), primary_key=True),
     Column('tag_id', Integer, ForeignKey('tags.id', ondelete='CASCADE'), primary_key=True)
 )
+
+class SubscriptionTier(str, enum.Enum):
+    free = "free"
+    premium = "premium"
+
+
+class SubscriptionStatus(str, enum.Enum):
+    free = "free"
+    active = "active"
+    canceled = "canceled"
+    past_due = "past_due"
+
 
 class User(Base):
     __tablename__ = "users"
@@ -28,10 +41,16 @@ class User(Base):
     verification_token = Column(String, nullable=True)  # Token for email verification
     reset_token = Column(String, nullable=True)  # Token for password reset
     reset_token_expires = Column(DateTime, nullable=True)  # Expiration for reset token
+    subscription_tier = Column(Enum(SubscriptionTier), default=SubscriptionTier.free)  # 'free' or 'premium'
+    trial_ends_at = Column(DateTime, nullable=True)  # For future trial functionality
     created_at = Column(DateTime, default=datetime.utcnow)
 
     # Relationship with routines (one user has many routines)
     routines = relationship("Routine", back_populates="user", cascade="all, delete-orphan")
+    # Relationship with subscription
+    subscription = relationship("Subscription", back_populates="user", uselist=False, cascade="all, delete-orphan")
+    # Relationship with routine sessions
+    routine_sessions = relationship("RoutineSession", back_populates="user", cascade="all, delete-orphan")
 
 class Routine(Base):
     __tablename__ = "routines"
@@ -102,6 +121,41 @@ class RoutineRating(Base):
     # Relationships
     routine = relationship("Routine", back_populates="ratings")
     user = relationship("User")
+
+
+class Subscription(Base):
+    __tablename__ = "subscriptions"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, unique=True)
+    stripe_customer_id = Column(String, unique=True, nullable=True, index=True)
+    stripe_subscription_id = Column(String, unique=True, nullable=True, index=True)
+    subscription_status = Column(String, default="free", nullable=False)  # free, active, canceled, past_due
+    current_period_start = Column(DateTime, nullable=True)
+    current_period_end = Column(DateTime, nullable=True)
+    cancel_at_period_end = Column(Boolean, default=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    # Relationship with user
+    user = relationship("User", back_populates="subscription")
+
+
+class RoutineSession(Base):
+    __tablename__ = "routine_sessions"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    routine_id = Column(Integer, ForeignKey("routines.id"), nullable=False)
+    started_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    completed_at = Column(DateTime, nullable=True)
+    total_duration = Column(Integer, nullable=True)  # Duration in seconds
+    completed = Column(Boolean, default=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    # Relationships
+    user = relationship("User", back_populates="routine_sessions")
+    routine = relationship("Routine")
 
 
 # Pydantic Models for API validation
@@ -175,6 +229,8 @@ class UserCreate(UserBase):
 class UserResponse(UserBase):
     id: int
     is_active: bool
+    is_verified: bool
+    subscription_tier: str = "free"
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
@@ -227,3 +283,69 @@ class RoutineRatingInfo(BaseModel):
     average_rating: float
     total_ratings: int
     user_rating: Optional[int] = None  # Current user's rating if exists
+
+
+# Subscription Pydantic Models
+
+class SubscriptionBase(BaseModel):
+    subscription_status: str
+    current_period_start: Optional[datetime] = None
+    current_period_end: Optional[datetime] = None
+    cancel_at_period_end: bool = False
+
+
+class SubscriptionResponse(SubscriptionBase):
+    id: int
+    user_id: int
+    stripe_customer_id: Optional[str] = None
+    stripe_subscription_id: Optional[str] = None
+    created_at: datetime
+    updated_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+# Routine Session Pydantic Models
+
+class RoutineSessionCreate(BaseModel):
+    routine_id: int
+
+
+class RoutineSessionComplete(BaseModel):
+    total_duration: int  # Duration in seconds
+
+
+class RoutineSessionResponse(BaseModel):
+    id: int
+    user_id: int
+    routine_id: int
+    started_at: datetime
+    completed_at: Optional[datetime] = None
+    total_duration: Optional[int] = None
+    completed: bool
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+# Statistics Pydantic Models
+
+class UserStatsResponse(BaseModel):
+    total_routines_completed: int
+    total_time_seconds: int
+    current_streak: int
+    longest_streak: int
+    grade: str  # Bronze, Silver, Gold, Platinum, Diamond, Legend
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class ChartDataPoint(BaseModel):
+    date: str  # ISO date format YYYY-MM-DD
+    count: int  # Number of routines completed
+    duration: int  # Total duration in seconds
+
+
+class ChartDataResponse(BaseModel):
+    routines_by_day: List[ChartDataPoint]
+    last_30_days: List[ChartDataPoint]

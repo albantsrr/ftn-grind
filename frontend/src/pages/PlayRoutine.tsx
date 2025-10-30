@@ -16,6 +16,8 @@ export default function PlayRoutine() {
   const [isCompleted, setIsCompleted] = useState(false);
   const [copiedCode, setCopiedCode] = useState(false);
   const [autoPlay, setAutoPlay] = useState(true);
+  const [sessionId, setSessionId] = useState<number | null>(null);
+  const [sessionStartTime, setSessionStartTime] = useState<number | null>(null);
 
   useEffect(() => {
     loadRoutine();
@@ -68,15 +70,25 @@ export default function PlayRoutine() {
     }
   };
 
-  const startRoutine = () => {
+  const startRoutine = async () => {
     if (routine && routine.steps.length > 0) {
+      // Start session tracking
+      try {
+        const session = await api.startSession(routine.id!);
+        setSessionId(session.id);
+        setSessionStartTime(Date.now());
+      } catch (err) {
+        console.error('Failed to start session:', err);
+        // Continue even if session tracking fails
+      }
+
       setIsRunning(true);
       setCurrentStepIndex(0);
       setTimeRemaining(routine.steps[0].duree);
     }
   };
 
-  const handleStepComplete = () => {
+  const handleStepComplete = async () => {
     if (!routine) return;
 
     if (currentStepIndex < routine.steps.length - 1) {
@@ -86,6 +98,17 @@ export default function PlayRoutine() {
       setCurrentStepIndex(nextIndex);
       setTimeRemaining(routine.steps[nextIndex].duree);
     } else {
+      // Routine completed - track session
+      if (sessionId && sessionStartTime) {
+        try {
+          const totalDuration = Math.floor((Date.now() - sessionStartTime) / 1000);
+          await api.completeSession(sessionId, totalDuration);
+        } catch (err) {
+          console.error('Failed to complete session:', err);
+          // Continue even if session completion fails
+        }
+      }
+
       setIsRunning(false);
       setIsCompleted(true);
     }
@@ -204,6 +227,8 @@ export default function PlayRoutine() {
                 setCurrentStepIndex(0);
                 setIsRunning(false);
                 setIsPaused(false);
+                setSessionId(null);
+                setSessionStartTime(null);
               }}
               className="flex items-center justify-center gap-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white px-8 py-4 rounded-lg font-bold transition-all shadow-lg hover:shadow-xl"
             >

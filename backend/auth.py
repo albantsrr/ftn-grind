@@ -6,13 +6,8 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 from database import get_db
-from models import User, TokenData
-import os
-
-# Configuration
-SECRET_KEY = os.getenv("SECRET_KEY", "your-secret-key-change-in-production")
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
+from models import User, TokenData, SubscriptionTier
+from config import SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES
 
 # Password hashing
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -97,4 +92,21 @@ async def get_current_active_user(
     """Get the current active user"""
     if not current_user.is_active:
         raise HTTPException(status_code=400, detail="Inactive user")
+    return current_user
+
+
+async def require_premium(
+    current_user: User = Depends(get_current_active_user)
+) -> User:
+    """
+    Require that the current user has a Premium subscription.
+
+    This middleware should be used on routes that are Premium-only.
+    Raises 403 Forbidden if the user is not Premium.
+    """
+    if current_user.subscription_tier != SubscriptionTier.premium:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Premium subscription required. Upgrade to access this feature."
+        )
     return current_user

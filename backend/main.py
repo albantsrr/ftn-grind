@@ -1,10 +1,11 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
-from routers import routines, timer, auth, community, tags, ratings
+from routers import routines, timer, auth, community, tags, ratings, subscriptions, statistics
 from database import engine, Base
 import models
 import logging
+from config import DEFAULT_TAGS
 
 # Configure logging
 logging.basicConfig(
@@ -30,18 +31,7 @@ async def lifespan(app: FastAPI):
     from database import SessionLocal
     db = SessionLocal()
     try:
-        default_tags = [
-            {"nom": "Aim Training", "color": "#EF4444"},  # Red
-            {"nom": "Building", "color": "#F59E0B"},      # Orange
-            {"nom": "Edit Course", "color": "#10B981"},   # Green
-            {"nom": "Box Fight", "color": "#3B82F6"},     # Blue
-            {"nom": "Zone Wars", "color": "#8B5CF6"},     # Purple
-            {"nom": "Warm-up", "color": "#EC4899"},       # Pink
-            {"nom": "Advanced", "color": "#6366F1"},      # Indigo
-            {"nom": "Beginner", "color": "#14B8A6"},      # Teal
-        ]
-
-        for tag_data in default_tags:
+        for tag_data in DEFAULT_TAGS:
             existing = db.query(models.Tag).filter(models.Tag.nom == tag_data["nom"]).first()
             if not existing:
                 tag = models.Tag(**tag_data)
@@ -84,6 +74,8 @@ app.include_router(timer.router, prefix="/api/timer", tags=["timer"])
 app.include_router(community.router, prefix="/api/community", tags=["community"])
 app.include_router(tags.router, prefix="/api/tags", tags=["tags"])
 app.include_router(ratings.router, prefix="/api/ratings", tags=["ratings"])
+app.include_router(subscriptions.router, prefix="/api/subscriptions", tags=["subscriptions"])
+app.include_router(statistics.router, prefix="/api/statistics", tags=["statistics"])
 
 @app.get("/")
 async def root():

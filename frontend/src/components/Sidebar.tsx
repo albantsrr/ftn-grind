@@ -1,9 +1,12 @@
 import { Link, useLocation } from 'react-router-dom';
 import type { ReactNode } from 'react';
+import { GRADE_BADGES, type GradeName } from '../config/grades';
 
 interface SidebarProps {
   onLogout: () => void;
   username: string;
+  subscriptionTier?: 'free' | 'premium';
+  userGrade?: string;
 }
 
 interface NavItemProps {
@@ -39,8 +42,9 @@ function NavItem({ to, icon, label, active, disabled }: NavItemProps) {
   );
 }
 
-export default function Sidebar({ onLogout, username }: SidebarProps) {
+export default function Sidebar({ onLogout, username, subscriptionTier = 'free', userGrade }: SidebarProps) {
   const location = useLocation();
+  const isPremium = subscriptionTier === 'premium';
 
   return (
     <aside className="w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col">
@@ -75,10 +79,17 @@ export default function Sidebar({ onLogout, username }: SidebarProps) {
           disabled
         />
         <NavItem
-          to="/stats"
+          to="/statistics"
           icon="📊"
           label="Statistics"
-          disabled
+          active={location.pathname === '/statistics'}
+          disabled={!isPremium}
+        />
+        <NavItem
+          to="/billing"
+          icon="💳"
+          label="Billing"
+          active={location.pathname === '/billing'}
         />
         <NavItem
           to="/settings"
@@ -95,12 +106,35 @@ export default function Sidebar({ onLogout, username }: SidebarProps) {
             {username.charAt(0).toUpperCase()}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
-              {username}
-            </p>
-            <p className="text-xs text-gray-500 dark:text-gray-400">
-              Free Plan
-            </p>
+            <div className="flex items-center gap-2">
+              <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                {username}
+              </p>
+              {isPremium && userGrade && (
+                <img
+                  src={GRADE_BADGES[userGrade as GradeName]}
+                  alt={`${userGrade} badge`}
+                  title={`Grade: ${userGrade}`}
+                  className="w-5 h-5 object-contain"
+                />
+              )}
+            </div>
+            {isPremium ? (
+              <div className="flex items-center gap-1">
+                <span className="text-xs font-semibold bg-gradient-to-r from-purple-500 to-pink-500 text-white px-2 py-0.5 rounded">
+                  ⭐ Premium
+                </span>
+                {userGrade && (
+                  <span className="text-xs text-gray-600 dark:text-gray-400">
+                    {userGrade}
+                  </span>
+                )}
+              </div>
+            ) : (
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                Free Plan
+              </p>
+            )}
           </div>
         </div>
         <button

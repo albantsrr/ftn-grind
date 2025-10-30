@@ -4,7 +4,7 @@ from sqlalchemy import desc, or_, and_
 from typing import List, Optional
 from database import get_db
 from models import Routine, RoutineResponse, User, Tag
-from auth import get_current_active_user
+from auth import get_current_active_user, require_premium
 
 router = APIRouter()
 
@@ -18,10 +18,12 @@ def get_public_routines(
     author: Optional[str] = Query(None, description="Filter by author name"),
     tags: Optional[str] = Query(None, description="Comma-separated tag IDs to filter by"),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_active_user)
+    current_user: User = Depends(require_premium)
 ):
     """
     Retrieve all public routines from the community with advanced search and filtering
+
+    ⭐ Premium feature: Access to Community requires a Premium subscription.
 
     Parameters:
     - skip: Pagination offset
@@ -75,11 +77,13 @@ def get_public_routines(
 def toggle_routine_share(
     routine_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_active_user)
+    current_user: User = Depends(require_premium)
 ):
     """
     Toggle a routine's public/private status (share/unshare)
     Only the owner can share/unshare their routine
+
+    ⭐ Premium feature: Sharing routines requires a Premium subscription.
 
     Parameters:
     - routine_id: ID of the routine to share/unshare

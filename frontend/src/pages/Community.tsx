@@ -9,7 +9,9 @@ import RatingStars from '../components/RatingStars';
 import SearchBar from '../components/SearchBar';
 import FilterPanel from '../components/FilterPanel';
 import SkeletonCard from '../components/SkeletonCard';
+import PaywallModal from '../components/PaywallModal';
 import { useAuth } from '../contexts/AuthContext';
+import { GRADE_BADGES, type GradeName } from '../config/grades';
 
 export default function Community() {
   const navigate = useNavigate();
@@ -27,12 +29,38 @@ export default function Community() {
   const [userRating, setUserRating] = useState<number>(0);
   const [ratingError, setRatingError] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [showPaywall, setShowPaywall] = useState(false);
+  const [userGrade, setUserGrade] = useState<string | null>(null);
+
+  // Check for Premium access
+  const isPremium = user?.subscription_tier === 'premium';
+
+  // Check Premium access on mount
+  useEffect(() => {
+    if (!isPremium) {
+      setShowPaywall(true);
+    }
+  }, [isPremium]);
+
+  // Load user grade if Premium
+  useEffect(() => {
+    if (isPremium) {
+      api.getUserStats()
+        .then(stats => setUserGrade(stats.grade))
+        .catch(err => console.error('Failed to load user grade:', err));
+    }
+  }, [isPremium]);
 
   // Load routines when filters change
   useEffect(() => {
-    loadCommunityRoutines();
+    if (isPremium) {
+      loadCommunityRoutines();
+    } else {
+      // For Free users, immediately stop loading to show paywall
+      setLoading(false);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sortBy, searchQuery, selectedTagIds, currentPage]);
+  }, [sortBy, searchQuery, selectedTagIds, currentPage, isPremium]);
 
   // Reset to page 1 when filters change
   useEffect(() => {
@@ -167,7 +195,8 @@ export default function Community() {
     }
   };
 
-  if (loading && routines.length === 0) {
+  // Don't show loading screen if user is Free tier (paywall will be shown)
+  if (loading && routines.length === 0 && isPremium) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-gray-900 dark:to-gray-800">
         <div className="text-center">
@@ -180,8 +209,11 @@ export default function Community() {
 
   return (
     <div className="flex h-screen bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-gray-900 dark:to-gray-800 overflow-hidden">
+      {/* Paywall Modal */}
+      <PaywallModal isOpen={showPaywall} onClose={() => navigate('/')} feature="Community" />
+
       {/* Sidebar */}
-      <Sidebar onLogout={handleLogout} username={user?.username || 'User'} />
+      <Sidebar onLogout={handleLogout} username={user?.username || 'User'} subscriptionTier={user?.subscription_tier} />
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
@@ -339,6 +371,14 @@ export default function Community() {
                           <span className="text-sm font-medium text-gray-900 dark:text-white">
                             {routine.author_name}
                           </span>
+                          {routine.author_name === user?.username && userGrade && (
+                            <img
+                              src={GRADE_BADGES[userGrade as GradeName]}
+                              alt={`${userGrade} badge`}
+                              title={`Grade: ${userGrade}`}
+                              className="w-5 h-5 object-contain"
+                            />
+                          )}
                         </div>
                       )}
                     </div>

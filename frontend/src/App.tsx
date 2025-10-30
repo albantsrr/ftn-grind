@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
+import PremiumRoute from './components/PremiumRoute';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import ForgotPassword from './pages/ForgotPassword';
@@ -11,7 +12,9 @@ import CreateRoutine from './pages/CreateRoutine';
 import EditRoutine from './pages/EditRoutine';
 import PlayRoutine from './pages/PlayRoutine';
 import Community from './pages/Community';
+import Statistics from './pages/Statistics';
 import Settings from './pages/Settings';
+import Billing from './pages/Billing';
 
 function App() {
   return (
@@ -67,10 +70,28 @@ function App() {
             }
           />
           <Route
+            path="/statistics"
+            element={
+              <ProtectedRoute>
+                <PremiumRoute featureName="Statistics">
+                  <Statistics />
+                </PremiumRoute>
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/settings"
             element={
               <ProtectedRoute>
                 <Settings />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/billing"
+            element={
+              <ProtectedRoute>
+                <Billing />
               </ProtectedRoute>
             }
           />

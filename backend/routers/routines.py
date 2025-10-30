@@ -62,9 +62,26 @@ def create_routine(
     """
     Create a new routine with its steps for the current user
 
+    Free tier limitation: Users with free subscription can only create up to 2 routines.
+    Premium users have unlimited routines.
+
     Raises:
+        403: Free user has reached the limit of 2 routines
         422: Validation error (handled automatically by FastAPI/Pydantic)
     """
+    # Check free tier limitation
+    if current_user.subscription_tier == "free":
+        # Count existing routines for this user
+        routine_count = db.query(Routine).filter(
+            Routine.user_id == current_user.id
+        ).count()
+
+        if routine_count >= 2:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Free users are limited to 2 routines. Upgrade to Premium for unlimited routines."
+            )
+
     # Create routine with user_id
     new_routine = Routine(
         user_id=current_user.id,

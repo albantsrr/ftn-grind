@@ -1,4 +1,4 @@
-import type { Routine, RoutineCreate, LoginRequest, RegisterRequest, AuthResponse, User, Tag, TagCreate, RatingCreate, RoutineRatingInfo } from '../types';
+import type { Routine, RoutineCreate, LoginRequest, RegisterRequest, AuthResponse, User, Tag, TagCreate, RatingCreate, RoutineRatingInfo, Subscription, UserStats, ChartData, RoutineSession } from '../types';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
@@ -358,5 +358,98 @@ export const api = {
       const error = await response.json();
       throw new Error(error.detail || 'Failed to change password');
     }
+  },
+
+  // ==================== Subscriptions ====================
+
+  // Get subscription status
+  async getSubscriptionStatus(): Promise<Subscription> {
+    const response = await fetchWithAuth(`${API_URL}/api/subscriptions/status`, {
+      headers: getAuthHeaders(),
+    });
+    if (!response.ok) throw new Error('Failed to get subscription status');
+    return response.json();
+  },
+
+  // Create Stripe checkout session
+  async createCheckoutSession(): Promise<{ url: string }> {
+    const response = await fetchWithAuth(`${API_URL}/api/subscriptions/create-checkout-session`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || 'Failed to create checkout session');
+    }
+    return response.json();
+  },
+
+  // Create Stripe customer portal session
+  async createPortalSession(): Promise<{ url: string }> {
+    const response = await fetchWithAuth(`${API_URL}/api/subscriptions/portal`, {
+      headers: getAuthHeaders(),
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || 'Failed to create portal session');
+    }
+    return response.json();
+  },
+
+  // ==================== Statistics ====================
+
+  // Start a routine session
+  async startSession(routineId: number): Promise<RoutineSession> {
+    const response = await fetchWithAuth(`${API_URL}/api/statistics/session/start`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ routine_id: routineId }),
+    });
+    if (!response.ok) throw new Error('Failed to start session');
+    return response.json();
+  },
+
+  // Complete a routine session
+  async completeSession(sessionId: number, totalDuration: number): Promise<RoutineSession> {
+    const response = await fetchWithAuth(`${API_URL}/api/statistics/session/${sessionId}/complete`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ total_duration: totalDuration }),
+    });
+    if (!response.ok) throw new Error('Failed to complete session');
+    return response.json();
+  },
+
+  // Get user statistics
+  async getUserStats(): Promise<UserStats> {
+    const response = await fetchWithAuth(`${API_URL}/api/statistics/me`, {
+      headers: getAuthHeaders(),
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || 'Failed to get user stats');
+    }
+    return response.json();
+  },
+
+  // Get chart data
+  async getChartData(): Promise<ChartData> {
+    const response = await fetchWithAuth(`${API_URL}/api/statistics/chart-data`, {
+      headers: getAuthHeaders(),
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || 'Failed to get chart data');
+    }
+    return response.json();
+  },
+
+  // Get recent sessions
+  async getRecentSessions(limit: number = 10): Promise<RoutineSession[]> {
+    const response = await fetchWithAuth(`${API_URL}/api/statistics/sessions/recent?limit=${limit}`, {
+      headers: getAuthHeaders(),
+    });
+    if (!response.ok) throw new Error('Failed to get recent sessions');
+    return response.json();
   },
 };
