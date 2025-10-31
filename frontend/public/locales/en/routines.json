@@ -1,0 +1,80 @@
+{
+  "myRoutines": "My Routines",
+  "noRoutines": "No routines yet",
+  "noRoutinesSubtitle": "Create your first training routine to get started",
+  "createRoutine": "Create Routine",
+  "searchPlaceholder": "Search routines...",
+  "noResults": "No routines found",
+  "noResultsSubtitle": "Try adjusting your search terms",
+  "clearSearch": "Clear search",
+  "routinesReady": "routine(s) ready",
+  "create": {
+    "title": "Create Routine",
+    "name": "Routine Name",
+    "namePlaceholder": "e.g. Aim Training Session",
+    "soundType": "Sound Type",
+    "volume": "Volume",
+    "image": "Image",
+    "addStep": "Add Step",
+    "stepName": "Step Name",
+    "stepNamePlaceholder": "e.g. Tile Frenzy",
+    "mapCode": "Map Code",
+    "mapCodePlaceholder": "e.g. 8022-6842-4965",
+    "duration": "Duration (seconds)",
+    "tips": "Tips (optional)",
+    "tipsPlaceholder": "Any tips for this exercise...",
+    "removeStep": "Remove Step",
+    "createButton": "Create Routine",
+    "creating": "Creating..."
+  },
+  "edit": {
+    "title": "Edit Routine",
+    "updateButton": "Update Routine",
+    "updating": "Updating..."
+  },
+  "play": {
+    "title": "Play Routine",
+    "step": "Step",
+    "of": "of",
+    "mapCode": "Map Code",
+    "tips": "Tips",
+    "timeRemaining": "Time Remaining",
+    "pause": "Pause",
+    "resume": "Resume",
+    "next": "Next",
+    "finish": "Finish",
+    "complete": "Complete!"
+  },
+  "card": {
+    "steps": "step",
+    "steps_plural": "steps",
+    "duration": "{{minutes}}min",
+    "play": "Play",
+    "edit": "Edit",
+    "delete": "Delete",
+    "share": "Share",
+    "unshare": "Unshare",
+    "export": "Export",
+    "public": "Public"
+  },
+  "success": {
+    "created": "Routine created successfully",
+    "updated": "Routine updated successfully",
+    "deleted": "Routine deleted successfully",
+    "shared": "Routine shared with community",
+    "unshared": "Routine removed from community",
+    "exported": "Routine exported",
+    "imported": "{{count}} routine(s) imported successfully"
+  },
+  "errors": {
+    "nameRequired": "Routine name is required",
+    "stepsRequired": "At least one step is required",
+    "createFailed": "Failed to create routine",
+    "updateFailed": "Failed to update routine",
+    "deleteFailed": "Failed to delete routine",
+    "shareFailed": "Failed to share routine",
+    "loadFailed": "Failed to load routines",
+    "noRoutinesToExport": "No routines to export",
+    "importFailed": "Failed to import routines"
+  }
+}

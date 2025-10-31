@@ -1,0 +1,40 @@
+{
+  "sidebar": {
+    "myRoutines": "My Routines",
+    "community": "Community",
+    "statistics": "Statistics",
+    "billing": "Billing",
+    "settings": "Settings",
+    "logout": "Logout",
+    "freePlan": "Free Plan",
+    "premium": "Premium"
+  },
+  "paywall": {
+    "title": "Premium Feature",
+    "subtitle": "Unlock {{feature}}",
+    "features": {
+      "statistics": "Advanced Statistics",
+      "unlimitedRoutines": "Unlimited Routines",
+      "premiumSupport": "Premium Support"
+    },
+    "included": "Premium includes:",
+    "feature1": "Unlimited training routines",
+    "feature2": "Advanced statistics & analytics",
+    "feature3": "Performance tracking & grades",
+    "feature4": "Streak tracking",
+    "feature5": "Priority support",
+    "price": "$4.99/month",
+    "upgradeButton": "Upgrade to Premium",
+    "cancelButton": "Maybe Later"
+  },
+  "languageSwitcher": {
+    "english": "English",
+    "french": "Français",
+    "switchTo": "Switch to {{language}}"
+  },
+  "themeToggle": {
+    "light": "Light mode",
+    "dark": "Dark mode",
+    "switchTo": "Switch to {{mode}} mode"
+  }
+}

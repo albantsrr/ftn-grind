@@ -79,7 +79,7 @@ def create_routine(
         if routine_count >= 2:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Free users are limited to 2 routines. Upgrade to Premium for unlimited routines."
+                detail="You've reached the limit of 2 routines on the Free plan. Upgrade to Premium for unlimited routines and access to advanced statistics."
             )
 
     # Create routine with user_id

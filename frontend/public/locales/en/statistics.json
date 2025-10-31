@@ -1,0 +1,39 @@
+{
+  "title": "Statistics",
+  "subtitle": "Track your progress and performance",
+  "overview": {
+    "title": "Overview",
+    "totalRoutines": "Total Routines",
+    "totalTime": "Total Time",
+    "currentStreak": "Current Streak",
+    "longestStreak": "Longest Streak",
+    "days": "day",
+    "days_plural": "days",
+    "hours": "hour",
+    "hours_plural": "hours",
+    "minutes": "minute",
+    "minutes_plural": "minutes"
+  },
+  "grade": {
+    "title": "Your Grade",
+    "current": "Current Grade",
+    "nextGrade": "Next Grade",
+    "progress": "Progress",
+    "requirements": "Requirements"
+  },
+  "charts": {
+    "routinesPerDay": "Routines per Day",
+    "timePerDay": "Time per Day (minutes)",
+    "last30Days": "Last 30 Days"
+  },
+  "recentSessions": {
+    "title": "Recent Sessions",
+    "noSessions": "No sessions yet",
+    "loadMore": "Load More",
+    "completedOn": "Completed on"
+  },
+  "loading": "Loading statistics...",
+  "errors": {
+    "loadFailed": "Failed to load statistics"
+  }
+}

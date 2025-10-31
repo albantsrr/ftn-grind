@@ -1,0 +1,32 @@
+{
+  "title": "Community",
+  "subtitle": "Discover and share training routines",
+  "search": "Search routines...",
+  "filters": {
+    "title": "Filters",
+    "tags": "Tags",
+    "author": "Author",
+    "authorPlaceholder": "Filter by author...",
+    "sortBy": "Sort by",
+    "newest": "Newest",
+    "oldest": "Oldest",
+    "topRated": "Top Rated",
+    "name": "Name (A-Z)",
+    "clearAll": "Clear All"
+  },
+  "noRoutines": "No routines found",
+  "noRoutinesSubtitle": "Try adjusting your filters or search terms",
+  "loading": "Loading community routines...",
+  "byAuthor": "by {{author}}",
+  "rating": {
+    "average": "{{rating}} / 5",
+    "count": "{{count}} rating",
+    "count_plural": "{{count}} ratings",
+    "yourRating": "Your rating",
+    "rate": "Rate this routine"
+  },
+  "errors": {
+    "loadFailed": "Failed to load community routines",
+    "rateFailed": "Failed to rate routine"
+  }
+}

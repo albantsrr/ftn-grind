@@ -46,7 +46,7 @@ export default function Statistics() {
       setError(null);
     } catch (err) {
       console.error('Failed to load statistics:', err);
-      setError('Erreur lors du chargement des statistiques');
+      setError('Error loading statistics');
     } finally {
       setLoading(false);
     }
@@ -94,9 +94,9 @@ export default function Statistics() {
               </div>
 
               <div>
-                <h2 className="text-3xl font-bold text-gray-900 dark:text-white">Statistiques</h2>
+                <h2 className="text-3xl font-bold text-gray-900 dark:text-white">Statistics</h2>
                 <p className="text-gray-600 dark:text-gray-400 mt-1">
-                  Suivez votre progression et vos performances
+                  Track your progress and performance
                 </p>
               </div>
             </div>

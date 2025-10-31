@@ -45,17 +45,17 @@ export default function Settings() {
     e.preventDefault();
 
     if (!username.trim() || !email.trim()) {
-      showError('❌ Le nom d\'utilisateur et l\'email sont requis');
+      showError('❌ Username and email are required');
       return;
     }
 
     try {
       setLoading(true);
       await api.updateProfile({ username, email, full_name: fullName });
-      success('✅ Profil mis à jour avec succès');
+      success('✅ Profile updated successfully');
       // TODO: Update user in AuthContext
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Erreur lors de la mise à jour du profil';
+      const errorMessage = err instanceof Error ? err.message : 'Failed to update profile';
       showError('❌ ' + errorMessage);
     } finally {
       setLoading(false);
@@ -66,25 +66,25 @@ export default function Settings() {
     e.preventDefault();
 
     if (newPassword.length < 6) {
-      showError('❌ Le nouveau mot de passe doit contenir au moins 6 caractères');
+      showError('❌ New password must be at least 6 characters');
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      showError('❌ Les mots de passe ne correspondent pas');
+      showError('❌ Passwords do not match');
       return;
     }
 
     try {
       setPasswordLoading(true);
       await api.changePassword({ current_password: currentPassword, new_password: newPassword });
-      success('✅ Mot de passe modifié avec succès');
+      success('✅ Password changed successfully');
       setShowPasswordForm(false);
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Erreur lors du changement de mot de passe';
+      const errorMessage = err instanceof Error ? err.message : 'Failed to change password';
       showError('❌ ' + errorMessage);
     } finally {
       setPasswordLoading(false);
@@ -95,9 +95,9 @@ export default function Settings() {
     try {
       setResendingVerification(true);
       await api.resendVerificationEmail();
-      success('✅ Email de vérification renvoyé. Vérifiez votre boîte de réception.');
+      success('✅ Verification email sent. Check your inbox.');
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Erreur lors de l\'envoi de l\'email';
+      const errorMessage = err instanceof Error ? err.message : 'Failed to send verification email';
       showError('❌ ' + errorMessage);
     } finally {
       setResendingVerification(false);
@@ -123,9 +123,9 @@ export default function Settings() {
               </div>
 
               <div>
-                <h2 className="text-3xl font-bold text-gray-900 dark:text-white">Paramètres</h2>
+                <h2 className="text-3xl font-bold text-gray-900 dark:text-white">Settings</h2>
                 <p className="text-gray-600 dark:text-gray-400 mt-1">
-                  Gérez votre profil et vos préférences
+                  Manage your profile and preferences
                 </p>
               </div>
             </div>
@@ -146,13 +146,13 @@ export default function Settings() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                   </svg>
                 </div>
-                <h3 className="text-2xl font-bold text-gray-900 dark:text-white">Informations du Profil</h3>
+                <h3 className="text-2xl font-bold text-gray-900 dark:text-white">Profile Information</h3>
               </div>
 
               <form onSubmit={handleUpdateProfile} className="space-y-4">
                 <div>
                   <label htmlFor="username" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Nom d'utilisateur
+                    Username
                   </label>
                   <input
                     id="username"
@@ -166,7 +166,7 @@ export default function Settings() {
 
                 <div>
                   <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Adresse email
+                    Email Address
                   </label>
                   <div className="flex gap-2">
                     <input
@@ -183,9 +183,9 @@ export default function Settings() {
                         onClick={handleResendVerification}
                         disabled={resendingVerification}
                         className="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg font-medium transition-colors disabled:opacity-50"
-                        title="Email non vérifié"
+                        title="Email not verified"
                       >
-                        {resendingVerification ? '...' : 'Vérifier'}
+                        {resendingVerification ? '...' : 'Verify'}
                       </button>
                     )}
                   </div>
@@ -194,7 +194,7 @@ export default function Settings() {
                       <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                       </svg>
-                      Email non vérifié. Cliquez sur "Vérifier" pour recevoir un nouveau lien.
+                      Email not verified. Click "Verify" to receive a new link.
                     </p>
                   )}
                   {user?.is_verified && (
@@ -202,14 +202,14 @@ export default function Settings() {
                       <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                       </svg>
-                      Email vérifié
+                      Email verified
                     </p>
                   )}
                 </div>
 
                 <div>
                   <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Nom complet (optionnel)
+                    Full Name (optional)
                   </label>
                   <input
                     id="fullName"
@@ -217,7 +217,7 @@ export default function Settings() {
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
                     className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                    placeholder="Votre nom complet"
+                    placeholder="Your full name"
                   />
                 </div>
 
@@ -229,14 +229,14 @@ export default function Settings() {
                   {loading ? (
                     <>
                       <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                      Mise à jour...
+                      Updating...
                     </>
                   ) : (
                     <>
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                       </svg>
-                      Enregistrer les modifications
+                      Save Changes
                     </>
                   )}
                 </button>
@@ -252,7 +252,7 @@ export default function Settings() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                     </svg>
                   </div>
-                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white">Mot de passe</h3>
+                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white">Password</h3>
                 </div>
 
                 {!showPasswordForm && (
@@ -260,7 +260,7 @@ export default function Settings() {
                     onClick={() => setShowPasswordForm(true)}
                     className="px-4 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-900 dark:text-white rounded-lg font-medium transition-colors"
                   >
-                    Changer le mot de passe
+                    Change Password
                   </button>
                 )}
               </div>
@@ -269,7 +269,7 @@ export default function Settings() {
                 <form onSubmit={handleChangePassword} className="space-y-4">
                   <div>
                     <label htmlFor="currentPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Mot de passe actuel
+                      Current Password
                     </label>
                     <input
                       id="currentPassword"
@@ -283,7 +283,7 @@ export default function Settings() {
 
                   <div>
                     <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Nouveau mot de passe
+                      New Password
                     </label>
                     <input
                       id="newPassword"
@@ -298,7 +298,7 @@ export default function Settings() {
 
                   <div>
                     <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Confirmer le nouveau mot de passe
+                      Confirm New Password
                     </label>
                     <input
                       id="confirmPassword"
@@ -317,7 +317,7 @@ export default function Settings() {
                       disabled={passwordLoading}
                       className="flex-1 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white px-6 py-3 rounded-lg font-semibold transition-all shadow-lg hover:shadow-xl disabled:opacity-50"
                     >
-                      {passwordLoading ? 'Modification...' : 'Modifier le mot de passe'}
+                      {passwordLoading ? 'Changing...' : 'Change Password'}
                     </button>
                     <button
                       type="button"
@@ -329,7 +329,7 @@ export default function Settings() {
                       }}
                       className="px-6 py-3 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-900 dark:text-white rounded-lg font-semibold transition-colors"
                     >
-                      Annuler
+                      Cancel
                     </button>
                   </div>
                 </form>
@@ -337,7 +337,7 @@ export default function Settings() {
 
               {!showPasswordForm && (
                 <p className="text-gray-600 dark:text-gray-400 text-sm">
-                  Assurez-vous d'utiliser un mot de passe fort et unique pour protéger votre compte.
+                  Make sure to use a strong and unique password to protect your account.
                 </p>
               )}
             </div>
@@ -350,40 +350,40 @@ export default function Settings() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
                   </svg>
                 </div>
-                <h3 className="text-2xl font-bold text-gray-900 dark:text-white">Abonnement</h3>
+                <h3 className="text-2xl font-bold text-gray-900 dark:text-white">Subscription</h3>
               </div>
 
               <div className="space-y-4">
                 <div className="flex items-center justify-between p-4 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-lg border border-green-200 dark:border-green-800">
                   <div>
-                    <p className="text-lg font-bold text-gray-900 dark:text-white">Plan Gratuit</p>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">Accès à toutes les fonctionnalités de base</p>
+                    <p className="text-lg font-bold text-gray-900 dark:text-white">Free Plan</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">Access to all basic features</p>
                   </div>
                   <div className="px-4 py-2 bg-green-500 text-white rounded-lg font-bold">
-                    ACTIF
+                    ACTIVE
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Routines créées</p>
-                    <p className="text-2xl font-bold text-gray-900 dark:text-white">Illimité</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Routines Created</p>
+                    <p className="text-2xl font-bold text-gray-900 dark:text-white">Unlimited</p>
                   </div>
                   <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Accès communauté</p>
-                    <p className="text-2xl font-bold text-gray-900 dark:text-white">✓ Inclus</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Community Access</p>
+                    <p className="text-2xl font-bold text-gray-900 dark:text-white">✓ Included</p>
                   </div>
                 </div>
 
                 <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
                   <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                    🚀 Des fonctionnalités premium arrivent bientôt ! Synchronisation cloud, applications mobiles, et bien plus encore.
+                    🚀 Premium features coming soon! Cloud sync, mobile apps, and much more.
                   </p>
                   <button
                     disabled
                     className="w-full px-6 py-3 bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 rounded-lg font-semibold cursor-not-allowed"
                   >
-                    Passer au Premium (Bientôt disponible)
+                    Upgrade to Premium (Coming Soon)
                   </button>
                 </div>
               </div>
@@ -397,18 +397,18 @@ export default function Settings() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                   </svg>
                 </div>
-                <h3 className="text-2xl font-bold text-gray-900 dark:text-white">Zone de Danger</h3>
+                <h3 className="text-2xl font-bold text-gray-900 dark:text-white">Danger Zone</h3>
               </div>
 
               <p className="text-gray-600 dark:text-gray-400 text-sm mb-4">
-                Ces actions sont irréversibles. Procédez avec précaution.
+                These actions are irreversible. Proceed with caution.
               </p>
 
               <button
                 disabled
                 className="w-full px-6 py-3 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-lg font-semibold cursor-not-allowed border border-red-300 dark:border-red-800"
               >
-                Supprimer le compte (Bientôt disponible)
+                Delete Account (Coming Soon)
               </button>
             </div>
 

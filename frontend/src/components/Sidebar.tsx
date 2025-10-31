@@ -73,17 +73,10 @@ export default function Sidebar({ onLogout, username, subscriptionTier = 'free',
           active={location.pathname === '/community'}
         />
         <NavItem
-          to="/maps"
-          icon="🗺️"
-          label="Popular Maps"
-          disabled
-        />
-        <NavItem
           to="/statistics"
           icon="📊"
           label="Statistics"
           active={location.pathname === '/statistics'}
-          disabled={!isPremium}
         />
         <NavItem
           to="/billing"

@@ -1,0 +1,58 @@
+{
+  "title": "Paramètres",
+  "subtitle": "Gérez votre profil et vos préférences",
+  "profile": {
+    "title": "Informations du Profil",
+    "username": "Nom d'utilisateur",
+    "usernamePlaceholder": "Votre nom d'utilisateur",
+    "email": "Adresse email",
+    "emailPlaceholder": "votre@email.com",
+    "fullName": "Nom complet (optionnel)",
+    "fullNamePlaceholder": "Votre nom",
+    "emailVerified": "Email vérifié",
+    "emailNotVerified": "Email non vérifié",
+    "resendVerification": "Renvoyer l'email de vérification",
+    "updateButton": "Modifier le Profil",
+    "updating": "Modification..."
+  },
+  "password": {
+    "title": "Changer le mot de passe",
+    "currentPassword": "Mot de passe actuel",
+    "currentPasswordPlaceholder": "Entrez le mot de passe actuel",
+    "newPassword": "Nouveau mot de passe",
+    "newPasswordPlaceholder": "Entrez le nouveau mot de passe",
+    "confirmPassword": "Confirmer le nouveau mot de passe",
+    "confirmPasswordPlaceholder": "Re-saisissez le nouveau mot de passe",
+    "changeButton": "Modifier le mot de passe",
+    "changing": "Modification...",
+    "cancel": "Annuler"
+  },
+  "subscription": {
+    "title": "Abonnement",
+    "freePlan": "Plan Gratuit",
+    "premiumPlan": "Premium",
+    "active": "ACTIF",
+    "routines": "Routines",
+    "routinesLimit": "{{count}} / {{max}}",
+    "unlimited": "Illimité",
+    "upgradeToPremium": "Passer au Premium"
+  },
+  "danger": {
+    "title": "Zone de Danger",
+    "deleteAccount": "Supprimer le compte",
+    "deleteWarning": "Cette action est irréversible. Toutes vos données seront définitivement supprimées."
+  },
+  "success": {
+    "profileUpdated": "Profil modifié avec succès",
+    "passwordChanged": "Mot de passe modifié avec succès",
+    "verificationSent": "Email de vérification envoyé"
+  },
+  "errors": {
+    "usernameEmailRequired": "Le nom d'utilisateur et l'email sont requis",
+    "passwordTooShort": "Le nouveau mot de passe doit contenir au moins 6 caractères",
+    "passwordMismatch": "Les mots de passe ne correspondent pas",
+    "updateFailed": "Échec de la modification du profil",
+    "passwordChangeFailed": "Échec du changement de mot de passe",
+    "verificationFailed": "Échec de l'envoi de l'email de vérification"
+  }
+}

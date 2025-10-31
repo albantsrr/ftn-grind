@@ -1,0 +1,32 @@
+{
+  "title": "Communauté",
+  "subtitle": "Découvrez et partagez des routines d'entraînement",
+  "search": "Rechercher des routines...",
+  "filters": {
+    "title": "Filtres",
+    "tags": "Tags",
+    "author": "Auteur",
+    "authorPlaceholder": "Filtrer par auteur...",
+    "sortBy": "Trier par",
+    "newest": "Plus récent",
+    "oldest": "Plus ancien",
+    "topRated": "Mieux notées",
+    "name": "Nom (A-Z)",
+    "clearAll": "Tout effacer"
+  },
+  "noRoutines": "Aucune routine trouvée",
+  "noRoutinesSubtitle": "Essayez d'ajuster vos filtres ou termes de recherche",
+  "loading": "Chargement des routines de la communauté...",
+  "byAuthor": "par {{author}}",
+  "rating": {
+    "average": "{{rating}} / 5",
+    "count": "{{count}} note",
+    "count_plural": "{{count}} notes",
+    "yourRating": "Votre note",
+    "rate": "Noter cette routine"
+  },
+  "errors": {
+    "loadFailed": "Échec du chargement des routines de la communauté",
+    "rateFailed": "Échec de la notation de la routine"
+  }
+}

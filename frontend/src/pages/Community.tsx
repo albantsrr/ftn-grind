@@ -88,7 +88,7 @@ export default function Community() {
       setRoutines(data);
       setError(null);
     } catch (err) {
-      setError('Erreur lors du chargement des routines communautaires');
+      setError('Error loading community routines');
       console.error(err);
     } finally {
       setLoading(false);
@@ -144,7 +144,7 @@ export default function Community() {
       await loadCommunityRoutines();
       closeRatingModal();
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Erreur lors de la notation';
+      const errorMessage = err instanceof Error ? err.message : 'Error rating routine';
       setRatingError(errorMessage);
       console.error(err);
     }
@@ -231,7 +231,7 @@ export default function Community() {
               <div>
                 <h2 className="text-3xl font-bold text-gray-900 dark:text-white">Communauté</h2>
                 <p className="text-gray-600 dark:text-gray-400 mt-1">
-                  Découvrez les meilleures routines créées par la communauté
+                  Discover the best routines created by the community
                 </p>
               </div>
             </div>
@@ -282,7 +282,7 @@ export default function Community() {
                 <div className="flex-1">
                   <SearchBar
                     onSearch={handleSearchChange}
-                    placeholder="Rechercher une routine..."
+                    placeholder="Search for a routine..."
                     debounceMs={400}
                   />
                 </div>
@@ -310,7 +310,7 @@ export default function Community() {
               {/* Active Filters */}
               {(searchQuery || selectedTagIds.length > 0) && (
                 <div className="flex items-center gap-2 mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
-                  <span className="text-sm text-gray-600 dark:text-gray-400">Filtres actifs:</span>
+                  <span className="text-sm text-gray-600 dark:text-gray-400">Active filters:</span>
                   {searchQuery && (
                     <span className="px-2 py-1 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 rounded text-sm">
                       "{searchQuery}"
@@ -345,9 +345,9 @@ export default function Community() {
             ) : routines.length === 0 ? (
               <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-lg">
                 <div className="text-6xl mb-4">🌍</div>
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Aucune routine trouvée</h2>
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">No routines found</h2>
                 <p className="text-gray-600 dark:text-gray-400">
-                  Essayez de modifier vos filtres ou partagez votre première routine !
+                  Try adjusting your filters or share your first routine!
                 </p>
               </div>
             ) : (
@@ -391,19 +391,19 @@ export default function Community() {
                     <button
                       onClick={() => handlePageChange(currentPage - 1)}
                       disabled={currentPage === 1}
-                      className="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                      className="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-colors text-gray-900 dark:text-white font-medium"
                     >
-                      Précédent
+                      Previous
                     </button>
-                    <span className="px-4 py-2 text-gray-700 dark:text-gray-300">
+                    <span className="px-4 py-2 text-gray-700 dark:text-gray-300 font-medium">
                       Page {currentPage}
                     </span>
                     <button
                       onClick={() => handlePageChange(currentPage + 1)}
                       disabled={routines.length < itemsPerPage}
-                      className="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                      className="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-colors text-gray-900 dark:text-white font-medium"
                     >
-                      Suivant
+                      Next
                     </button>
                   </div>
                 </div>

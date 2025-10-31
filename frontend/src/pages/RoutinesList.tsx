@@ -60,9 +60,9 @@ export default function RoutinesList() {
     try {
       await api.deleteRoutine(id);
       await loadRoutines();
-      success('✅ Routine supprimée avec succès');
+      success('✅ Routine deleted successfully');
     } catch (err) {
-      showError('❌ Erreur lors de la suppression de la routine');
+      showError('❌ Error deleting routine de la routine');
       console.error(err);
     }
   };
@@ -78,7 +78,7 @@ export default function RoutinesList() {
 
   const handleExportAll = () => {
     if (routines.length === 0) {
-      showError('❌ Aucune routine à exporter');
+      showError('❌ No routines to export');
       return;
     }
     try {
@@ -98,12 +98,12 @@ export default function RoutinesList() {
       // Check new status
       const updatedRoutine = await api.getRoutine(id);
       if (updatedRoutine.is_public) {
-        success('✅ Routine partagée avec la communauté');
+        success('✅ Routine shared with community');
       } else {
-        success('✅ Routine retirée de la communauté');
+        success('✅ Routine removed from community');
       }
     } catch (err) {
-      showError('❌ Erreur lors du partage de la routine');
+      showError('❌ Error sharing routine de la routine');
       console.error(err);
     }
   };
@@ -128,9 +128,9 @@ export default function RoutinesList() {
       await loadRoutines();
 
       if (failCount === 0) {
-        success(`✅ ${successCount} routine(s) importée(s) avec succès`);
+        success(`✅ ${successCount} routine(s) imported successfully`);
       } else {
-        showError(`⚠️ ${successCount} importée(s), ${failCount} échouée(s)`);
+        showError(`⚠️ ${successCount} imported, ${failCount} failed`);
       }
       setShowActionsMenu(false);
     } catch (err) {

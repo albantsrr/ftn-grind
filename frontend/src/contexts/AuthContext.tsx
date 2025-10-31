@@ -1,12 +1,14 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import type { User, AuthResponse } from '../types';
+import { api } from '../services/api';
 
 interface AuthContextType {
   user: User | null;
   token: string | null;
   login: (authResponse: AuthResponse) => void;
   logout: () => void;
+  refreshUser: () => Promise<void>;
   isAuthenticated: boolean;
   isLoading: boolean;
 }
@@ -30,13 +32,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         setToken(storedToken);
         setUser(JSON.parse(storedUser));
+
+        // Refresh user data from server to get latest subscription status
+        api.getCurrentUser()
+          .then(updatedUser => {
+            setUser(updatedUser);
+            localStorage.setItem(USER_KEY, JSON.stringify(updatedUser));
+          })
+          .catch(error => {
+            console.error('Failed to refresh user on mount:', error);
+            // If token is invalid, clear auth
+            if (error.message.includes('Session expired')) {
+              localStorage.removeItem(TOKEN_KEY);
+              localStorage.removeItem(USER_KEY);
+              setToken(null);
+              setUser(null);
+            }
+          })
+          .finally(() => {
+            setIsLoading(false);
+          });
       } catch (error) {
         console.error('Failed to parse stored user:', error);
         localStorage.removeItem(TOKEN_KEY);
         localStorage.removeItem(USER_KEY);
+        setIsLoading(false);
       }
+    } else {
+      setIsLoading(false);
     }
-    setIsLoading(false);
   }, []);
 
   const login = (authResponse: AuthResponse) => {
@@ -61,11 +85,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem(USER_KEY);
   };
 
+  const refreshUser = async () => {
+    try {
+      const updatedUser = await api.getCurrentUser();
+      setUser(updatedUser);
+      localStorage.setItem(USER_KEY, JSON.stringify(updatedUser));
+    } catch (error) {
+      console.error('Failed to refresh user:', error);
+      // If refresh fails, logout the user
+      logout();
+    }
+  };
+
   const value = {
     user,
     token,
     login,
     logout,
+    refreshUser,
     isAuthenticated: !!token && !!user,
     isLoading,
   };

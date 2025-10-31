@@ -1,0 +1,58 @@
+{
+  "title": "Settings",
+  "subtitle": "Manage your profile and preferences",
+  "profile": {
+    "title": "Profile Information",
+    "username": "Username",
+    "usernamePlaceholder": "Your username",
+    "email": "Email",
+    "emailPlaceholder": "your@email.com",
+    "fullName": "Full Name (optional)",
+    "fullNamePlaceholder": "Your name",
+    "emailVerified": "Email verified",
+    "emailNotVerified": "Email not verified",
+    "resendVerification": "Resend verification email",
+    "updateButton": "Update Profile",
+    "updating": "Updating..."
+  },
+  "password": {
+    "title": "Change Password",
+    "currentPassword": "Current Password",
+    "currentPasswordPlaceholder": "Enter current password",
+    "newPassword": "New Password",
+    "newPasswordPlaceholder": "Enter new password",
+    "confirmPassword": "Confirm New Password",
+    "confirmPasswordPlaceholder": "Re-enter new password",
+    "changeButton": "Change Password",
+    "changing": "Changing...",
+    "cancel": "Cancel"
+  },
+  "subscription": {
+    "title": "Subscription",
+    "freePlan": "Free Plan",
+    "premiumPlan": "Premium",
+    "active": "ACTIVE",
+    "routines": "Routines",
+    "routinesLimit": "{{count}} / {{max}}",
+    "unlimited": "Unlimited",
+    "upgradeToPremium": "Upgrade to Premium"
+  },
+  "danger": {
+    "title": "Danger Zone",
+    "deleteAccount": "Delete Account",
+    "deleteWarning": "This action is irreversible. All your data will be permanently deleted."
+  },
+  "success": {
+    "profileUpdated": "Profile updated successfully",
+    "passwordChanged": "Password changed successfully",
+    "verificationSent": "Verification email sent"
+  },
+  "errors": {
+    "usernameEmailRequired": "Username and email are required",
+    "passwordTooShort": "New password must be at least 6 characters",
+    "passwordMismatch": "Passwords do not match",
+    "updateFailed": "Failed to update profile",
+    "passwordChangeFailed": "Failed to change password",
+    "verificationFailed": "Failed to send verification email"
+  }
+}
