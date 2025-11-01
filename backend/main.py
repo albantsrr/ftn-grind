@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
-from routers import routines, timer, auth, community, tags, ratings, subscriptions, statistics
+from routers import routines, timer, auth, community, tags, ratings, subscriptions, statistics, leaderboard
 from database import engine, Base
 import models
 import logging
@@ -76,6 +76,7 @@ app.include_router(tags.router, prefix="/api/tags", tags=["tags"])
 app.include_router(ratings.router, prefix="/api/ratings", tags=["ratings"])
 app.include_router(subscriptions.router, prefix="/api/subscriptions", tags=["subscriptions"])
 app.include_router(statistics.router, prefix="/api/statistics", tags=["statistics"])
+app.include_router(leaderboard.router)
 
 @app.get("/")
 async def root():
