@@ -5,6 +5,7 @@ import { api } from '../services/api';
 import Sidebar from '../components/Sidebar';
 import ThemeToggle from '../components/ThemeToggle';
 import Toast from '../components/Toast';
+import AvatarUpload from '../components/AvatarUpload';
 import { useToast } from '../hooks/useToast';
 
 export default function Settings() {
@@ -104,10 +105,24 @@ export default function Settings() {
     }
   };
 
+  const handleAvatarUpload = async (base64Image: string) => {
+    try {
+      await api.updateAvatar(base64Image);
+      success('✅ Avatar updated successfully');
+      // Refresh user data to get updated avatar
+      const updatedUser = await api.getCurrentUser();
+      localStorage.setItem('fortiflow_user', JSON.stringify(updatedUser));
+      window.location.reload(); // Reload to update context
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to upload avatar';
+      throw new Error(errorMessage);
+    }
+  };
+
   return (
     <div className="flex h-screen bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-gray-900 dark:to-gray-800 overflow-hidden">
       {/* Sidebar */}
-      <Sidebar onLogout={handleLogout} username={user?.username || 'User'} subscriptionTier={user?.subscription_tier} />
+      <Sidebar onLogout={handleLogout} username={user?.username || 'User'} subscriptionTier={user?.subscription_tier} avatarUrl={user?.avatar_url} />
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
@@ -137,6 +152,27 @@ export default function Settings() {
         {/* Content Area */}
         <div className="flex-1 overflow-y-auto">
           <div className="max-w-4xl mx-auto px-8 py-6 space-y-6">
+
+            {/* Avatar Section */}
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md border border-gray-200 dark:border-gray-700 p-6">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center">
+                  <svg className="w-6 h-6 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                </div>
+                <h3 className="text-2xl font-bold text-gray-900 dark:text-white">Profile Avatar</h3>
+              </div>
+
+              <div className="flex justify-center">
+                <AvatarUpload
+                  currentAvatar={user?.avatar_url}
+                  onUpload={handleAvatarUpload}
+                  size="lg"
+                />
+              </div>
+            </div>
 
             {/* Profile Section */}
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md border border-gray-200 dark:border-gray-700 p-6">

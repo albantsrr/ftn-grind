@@ -360,6 +360,20 @@ export const api = {
     }
   },
 
+  // Update avatar
+  async updateAvatar(avatar_url: string): Promise<User> {
+    const response = await fetchWithAuth(`${API_URL}/api/auth/update-avatar`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ avatar_url }),
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || 'Failed to update avatar');
+    }
+    return response.json();
+  },
+
   // ==================== Subscriptions ====================
 
   // Get subscription status

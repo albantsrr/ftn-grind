@@ -7,6 +7,7 @@ interface SidebarProps {
   username: string;
   subscriptionTier?: 'free' | 'premium';
   userGrade?: string;
+  avatarUrl?: string;
 }
 
 interface NavItemProps {
@@ -42,9 +43,14 @@ function NavItem({ to, icon, label, active, disabled }: NavItemProps) {
   );
 }
 
-export default function Sidebar({ onLogout, username, subscriptionTier = 'free', userGrade }: SidebarProps) {
+export default function Sidebar({ onLogout, username, subscriptionTier = 'free', userGrade, avatarUrl }: SidebarProps) {
   const location = useLocation();
   const isPremium = subscriptionTier === 'premium';
+
+  const getUserInitials = () => {
+    if (!username) return '?';
+    return username.charAt(0).toUpperCase();
+  };
 
   return (
     <aside className="w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col">
@@ -101,8 +107,16 @@ export default function Sidebar({ onLogout, username, subscriptionTier = 'free',
       {/* User Section */}
       <div className="p-4 border-t border-gray-200 dark:border-gray-700">
         <div className="flex items-center gap-3 mb-3">
-          <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center text-white font-bold text-lg">
-            {username.charAt(0).toUpperCase()}
+          <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center text-white font-bold text-lg overflow-hidden shadow-lg ring-2 ring-white dark:ring-gray-700">
+            {avatarUrl ? (
+              <img
+                src={avatarUrl}
+                alt={username}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              getUserInitials()
+            )}
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">

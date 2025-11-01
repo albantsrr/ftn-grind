@@ -87,7 +87,7 @@ export default function Billing() {
 
   return (
     <div className="flex h-screen bg-gray-50 dark:bg-gray-900">
-      <Sidebar onLogout={logout} username={user?.username || ''} subscriptionTier={user?.subscription_tier} />
+      <Sidebar onLogout={logout} username={user?.username || ''} subscriptionTier={user?.subscription_tier} avatarUrl={user?.avatar_url} />
 
       <div className="flex-1 overflow-auto">
         <div className="max-w-4xl mx-auto p-8">

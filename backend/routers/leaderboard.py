@@ -112,6 +112,7 @@ async def get_leaderboard(
         db.query(
             User.id,
             User.username,
+            User.avatar_url,
             User.subscription_tier,
             func.coalesce(stats_subquery.c.total_routines, 0).label('total_routines'),
             func.coalesce(stats_subquery.c.total_time, 0).label('total_time')
@@ -129,7 +130,7 @@ async def get_leaderboard(
     # Calculate streaks and scores for each user
     leaderboard_entries = []
     for user_data in users_data:
-        user_id, username, subscription_tier, total_routines, total_time = user_data
+        user_id, username, avatar_url, subscription_tier, total_routines, total_time = user_data
 
         # Get sessions for streak calculation
         sessions = db.query(RoutineSession).filter(
@@ -149,6 +150,7 @@ async def get_leaderboard(
         leaderboard_entries.append({
             'user_id': user_id,
             'username': username,
+            'avatar_url': avatar_url,
             'grade': grade,
             'total_score': total_score,
             'total_routines_completed': total_routines,

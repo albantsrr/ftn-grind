@@ -36,6 +36,7 @@ class User(Base):
     username = Column(String, unique=True, index=True, nullable=False)
     hashed_password = Column(String, nullable=False)
     full_name = Column(String, nullable=True)
+    avatar_url = Column(Text, nullable=True)  # Avatar URL or base64 data
     is_active = Column(Boolean, default=True)
     is_verified = Column(Boolean, default=False)  # Email verification status
     verification_token = Column(String, nullable=True)  # Token for email verification
@@ -220,6 +221,7 @@ class UserBase(BaseModel):
     email: EmailStr
     username: str
     full_name: Optional[str] = None
+    avatar_url: Optional[str] = None
 
 
 class UserCreate(UserBase):
@@ -244,6 +246,10 @@ class Token(BaseModel):
 
 class TokenData(BaseModel):
     email: Optional[str] = None
+
+
+class AvatarUpdate(BaseModel):
+    avatar_url: str  # Base64 encoded image or URL
 
 
 # Tag Pydantic Models

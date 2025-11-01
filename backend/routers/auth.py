@@ -3,7 +3,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from datetime import timedelta
 from database import get_db
-from models import User, UserCreate, UserResponse, Token
+from models import User, UserCreate, UserResponse, Token, AvatarUpdate
 from auth import (
     get_password_hash,
     authenticate_user,
@@ -454,3 +454,38 @@ def change_password(
 
     logger.info(f"Password changed successfully for user: {current_user.email}")
     return {"message": "Password changed successfully"}
+
+
+@router.post("/update-avatar", response_model=UserResponse)
+def update_avatar(
+    avatar_data: AvatarUpdate,
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Update user's avatar (base64 image data)
+
+    Args:
+        avatar_data: Avatar update data (base64 encoded image)
+        current_user: Current authenticated user
+        db: Database session
+
+    Returns:
+        Updated user information
+    """
+    logger.info(f"Avatar update requested for user: {current_user.email}")
+
+    # Validate base64 format (basic check)
+    if not avatar_data.avatar_url:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Avatar data cannot be empty"
+        )
+
+    # Update avatar
+    current_user.avatar_url = avatar_data.avatar_url
+    db.commit()
+    db.refresh(current_user)
+
+    logger.info(f"Avatar updated successfully for user: {current_user.email}")
+    return current_user

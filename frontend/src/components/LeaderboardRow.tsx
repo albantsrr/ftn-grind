@@ -40,9 +40,17 @@ export default function LeaderboardRow({ entry }: LeaderboardRowProps) {
       {/* Player */}
       <td className="px-6 py-4 whitespace-nowrap">
         <div className="flex items-center gap-3">
-          {/* Avatar placeholder */}
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold shadow-lg">
-            {entry.username.charAt(0).toUpperCase()}
+          {/* Avatar */}
+          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold shadow-lg overflow-hidden ring-2 ring-white dark:ring-gray-700">
+            {entry.avatar_url ? (
+              <img
+                src={entry.avatar_url}
+                alt={entry.username}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              entry.username.charAt(0).toUpperCase()
+            )}
           </div>
           <div>
             <div className="flex items-center gap-2">

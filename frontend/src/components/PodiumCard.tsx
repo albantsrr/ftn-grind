@@ -44,6 +44,10 @@ export default function PodiumCard({ entry, position }: PodiumCardProps) {
     return `${minutes}m`;
   };
 
+  const getUserInitial = () => {
+    return entry.username.charAt(0).toUpperCase();
+  };
+
   return (
     <div className={`relative ${styles.size} transition-all duration-300 hover:scale-110`}>
       {/* Crown only for first place - outside card */}
@@ -57,9 +61,25 @@ export default function PodiumCard({ entry, position }: PodiumCardProps) {
         className={`relative bg-white dark:bg-gray-800 rounded-2xl p-6 border-2 ${styles.borderColor} bg-gradient-to-br ${styles.bgGradient} shadow-xl overflow-hidden`}
       >
 
-        {/* Top: Rank + Username + Badges */}
+        {/* Top: Avatar + Medal */}
         <div className="text-center mb-4">
-          <div className="text-4xl mb-2">{styles.medal}</div>
+          <div className="relative inline-block mb-3">
+            {/* Medal Badge on Avatar */}
+            <div className="absolute -top-2 -right-2 text-3xl z-10 drop-shadow-lg">{styles.medal}</div>
+
+            {/* Avatar */}
+            <div className="w-20 h-20 rounded-full overflow-hidden border-4 border-white dark:border-gray-700 shadow-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+              {entry.avatar_url ? (
+                <img
+                  src={entry.avatar_url}
+                  alt={entry.username}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <span className="text-white font-bold text-2xl">{getUserInitial()}</span>
+              )}
+            </div>
+          </div>
 
           <div className="flex items-center justify-center gap-2 mb-1">
             <h3 className="text-xl font-bold text-gray-900 dark:text-white">

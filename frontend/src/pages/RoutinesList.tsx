@@ -159,7 +159,7 @@ export default function RoutinesList() {
   return (
     <div className="flex h-screen bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-gray-900 dark:to-gray-800 overflow-hidden">
       {/* Sidebar */}
-      <Sidebar onLogout={handleLogout} username={user?.username || 'User'} subscriptionTier={user?.subscription_tier} />
+      <Sidebar onLogout={handleLogout} username={user?.username || 'User'} subscriptionTier={user?.subscription_tier} avatarUrl={user?.avatar_url} />
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">

@@ -78,7 +78,7 @@ export default function Statistics() {
       <PaywallModal isOpen={showPaywall} onClose={() => navigate('/')} feature="Statistics" />
 
       {/* Sidebar */}
-      <Sidebar onLogout={handleLogout} username={user?.username || 'User'} subscriptionTier={user?.subscription_tier} />
+      <Sidebar onLogout={handleLogout} username={user?.username || 'User'} subscriptionTier={user?.subscription_tier} avatarUrl={user?.avatar_url} />
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
