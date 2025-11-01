@@ -73,6 +73,12 @@ export default function Sidebar({ onLogout, username, subscriptionTier = 'free',
           active={location.pathname === '/community'}
         />
         <NavItem
+          to="/leaderboard"
+          icon="🏆"
+          label="Leaderboard"
+          active={location.pathname === '/leaderboard'}
+        />
+        <NavItem
           to="/statistics"
           icon="📊"
           label="Statistics"

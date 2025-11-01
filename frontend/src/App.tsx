@@ -15,6 +15,7 @@ import Community from './pages/Community';
 import Statistics from './pages/Statistics';
 import Settings from './pages/Settings';
 import Billing from './pages/Billing';
+import Leaderboard from './pages/Leaderboard';
 
 function App() {
   return (
@@ -66,6 +67,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <Community />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/leaderboard"
+            element={
+              <ProtectedRoute>
+                <Leaderboard />
               </ProtectedRoute>
             }
           />

@@ -229,7 +229,7 @@ export default function Community() {
               </div>
 
               <div>
-                <h2 className="text-3xl font-bold text-gray-900 dark:text-white">Communauté</h2>
+                <h2 className="text-3xl font-bold text-gray-900 dark:text-white">Community</h2>
                 <p className="text-gray-600 dark:text-gray-400 mt-1">
                   Discover the best routines created by the community
                 </p>
@@ -300,9 +300,9 @@ export default function Community() {
                     onChange={(e) => setSortBy(e.target.value as 'date' | 'nom' | 'rating')}
                     className="px-4 py-2 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   >
-                    <option value="date">Plus récent</option>
-                    <option value="nom">Nom (A-Z)</option>
-                    <option value="rating">Mieux notés</option>
+                    <option value="date">Most recent</option>
+                    <option value="nom">Name (A-Z)</option>
+                    <option value="rating">Top rated</option>
                   </select>
                 </div>
               </div>

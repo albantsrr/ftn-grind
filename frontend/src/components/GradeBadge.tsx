@@ -49,7 +49,7 @@ export default function GradeBadge({ grade, currentRoutines, currentStreak, curr
       <div className="relative z-10">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <p className="text-white/80 text-sm font-medium mb-2">Votre grade actuel</p>
+            <p className="text-white/80 text-sm font-medium mb-2">Your current grade</p>
             <h3 className="text-5xl font-bold flex items-center gap-4">
               <img
                 src={GRADE_BADGES[grade as GradeName]}
@@ -95,7 +95,7 @@ export default function GradeBadge({ grade, currentRoutines, currentStreak, curr
         {nextGradeName ? (
           <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
             <p className="text-white/90 text-sm font-medium mb-2 flex items-center gap-2">
-              🎯 Prochain objectif:
+              🎯 Next goal:
               <img
                 src={GRADE_BADGES[nextGradeName as GradeName]}
                 alt={`${nextGradeName} badge`}
@@ -106,28 +106,28 @@ export default function GradeBadge({ grade, currentRoutines, currentStreak, curr
             <div className="flex flex-col gap-1 text-sm">
               {routinesRemaining > 0 && (
                 <p className="text-white/80">
-                  ✨ Encore <span className="font-bold">{routinesRemaining}</span> routine{routinesRemaining > 1 ? 's' : ''}
+                  ✨ <span className="font-bold">{routinesRemaining}</span> more routine{routinesRemaining > 1 ? 's' : ''}
                 </p>
               )}
               {streakRemaining > 0 && (
                 <p className="text-white/80">
-                  🔥 Encore <span className="font-bold">{streakRemaining}</span> jour{streakRemaining > 1 ? 's' : ''} de série
+                  🔥 <span className="font-bold">{streakRemaining}</span> more day{streakRemaining > 1 ? 's' : ''} streak
                 </p>
               )}
               {timeRemaining > 0 && (
                 <p className="text-white/80">
-                  ⏱ Encore <span className="font-bold">{Math.ceil(timeRemaining)}</span> heure{timeRemaining > 1 ? 's' : ''} d'entraînement
+                  ⏱ <span className="font-bold">{Math.ceil(timeRemaining)}</span> more hour{timeRemaining > 1 ? 's' : ''} of training
                 </p>
               )}
               {routinesRemaining === 0 && streakRemaining === 0 && timeRemaining <= 0 && (
-                <p className="text-white font-bold">🎉 Prêt pour le prochain grade!</p>
+                <p className="text-white font-bold">🎉 Ready for the next grade!</p>
               )}
             </div>
           </div>
         ) : (
           <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
             <p className="text-white font-bold text-center">
-              👑 Vous avez atteint le grade maximum! Félicitations!
+              👑 You've reached the maximum grade! Congratulations!
             </p>
           </div>
         )}

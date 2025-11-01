@@ -1,4 +1,4 @@
-import type { Routine, RoutineCreate, LoginRequest, RegisterRequest, AuthResponse, User, Tag, TagCreate, RatingCreate, RoutineRatingInfo, Subscription, UserStats, ChartData, RoutineSession } from '../types';
+import type { Routine, RoutineCreate, LoginRequest, RegisterRequest, AuthResponse, User, Tag, TagCreate, RatingCreate, RoutineRatingInfo, Subscription, UserStats, ChartData, RoutineSession, LeaderboardResponse } from '../types';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
@@ -450,6 +450,29 @@ export const api = {
       headers: getAuthHeaders(),
     });
     if (!response.ok) throw new Error('Failed to get recent sessions');
+    return response.json();
+  },
+
+  // ==================== Leaderboard ====================
+
+  // Get leaderboard
+  async getLeaderboard(params?: {
+    limit?: number;
+    offset?: number;
+    search?: string;
+  }): Promise<LeaderboardResponse> {
+    const queryParams = new URLSearchParams();
+    if (params?.limit) queryParams.append('limit', params.limit.toString());
+    if (params?.offset) queryParams.append('offset', params.offset.toString());
+    if (params?.search) queryParams.append('search', params.search);
+
+    const response = await fetchWithAuth(`${API_URL}/api/leaderboard?${queryParams}`, {
+      headers: getAuthHeaders(),
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || 'Failed to get leaderboard');
+    }
     return response.json();
   },
 };

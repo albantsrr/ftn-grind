@@ -72,7 +72,7 @@ export default function FilterPanel({
             />
           </svg>
           <span className="font-semibold text-gray-900 dark:text-white">
-            Filtrer par tags
+            Filter by tags
           </span>
           {selectedCount > 0 && (
             <span className="bg-purple-600 text-white text-xs font-bold px-2 py-0.5 rounded-full">

@@ -146,3 +146,26 @@ export interface ChartData {
   routines_by_day: ChartDataPoint[];
   last_30_days: ChartDataPoint[];
 }
+
+// Leaderboard types
+export interface LeaderboardEntry {
+  position: number;
+  user_id: number;
+  username: string;
+  avatar_url?: string;
+  grade: string;
+  total_score: number;
+  total_routines_completed: number;
+  current_streak: number;
+  longest_streak: number;
+  total_time_seconds: number;
+  is_premium: boolean;
+  is_current_user?: boolean;
+}
+
+export interface LeaderboardResponse {
+  entries: LeaderboardEntry[];
+  current_user_entry: LeaderboardEntry | null;
+  total_count: number;
+  season?: string;
+}

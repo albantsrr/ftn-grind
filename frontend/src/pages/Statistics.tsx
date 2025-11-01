@@ -115,7 +115,7 @@ export default function Statistics() {
                   onClick={loadStatistics}
                   className="mt-4 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors"
                 >
-                  Réessayer
+                  Retry
                 </button>
               </div>
             ) : stats ? (
@@ -131,10 +131,10 @@ export default function Statistics() {
                 {/* Stats Grid with Animated Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   <StatsCard
-                    title="Routines complétées"
+                    title="Routines Completed"
                     value={stats.total_routines_completed}
                     color="green"
-                    tooltip="Nombre total de routines que vous avez complétées"
+                    tooltip="Total number of routines you have completed"
                     delay={100}
                     icon={
                       <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -144,10 +144,10 @@ export default function Statistics() {
                   />
 
                   <StatsCard
-                    title="Temps total"
+                    title="Total Time"
                     value={formatDuration(stats.total_time_seconds)}
                     color="blue"
-                    tooltip="Temps total passé à s'entraîner"
+                    tooltip="Total time spent training"
                     delay={200}
                     icon={
                       <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -157,10 +157,10 @@ export default function Statistics() {
                   />
 
                   <StatsCard
-                    title="Meilleure série"
-                    value={`${stats.longest_streak} jours`}
+                    title="Best Streak"
+                    value={`${stats.longest_streak} days`}
                     color="orange"
-                    tooltip="Plus longue série de jours consécutifs d'entraînement"
+                    tooltip="Longest streak of consecutive training days"
                     delay={300}
                     icon={
                       <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -177,15 +177,15 @@ export default function Statistics() {
             ) : (
               <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-lg">
                 <div className="text-6xl mb-4">📊</div>
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Aucune donnée disponible</h2>
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">No data available</h2>
                 <p className="text-gray-600 dark:text-gray-400 mb-6">
-                  Commencez à utiliser l'application pour voir vos statistiques !
+                  Start using the app to see your statistics!
                 </p>
                 <button
                   onClick={() => navigate('/')}
                   className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-lg font-semibold transition-all shadow-lg hover:shadow-xl"
                 >
-                  Créer une routine
+                  Create a routine
                 </button>
               </div>
             )}

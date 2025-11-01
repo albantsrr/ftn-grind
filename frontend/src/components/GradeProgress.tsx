@@ -37,9 +37,9 @@ export default function GradeProgress({ stats }: GradeProgressProps) {
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
       <div className="flex items-center justify-between mb-6">
-        <h3 className="text-xl font-bold text-gray-900 dark:text-white">Système de grades</h3>
+        <h3 className="text-xl font-bold text-gray-900 dark:text-white">Grade System</h3>
         <div className="text-sm text-gray-600 dark:text-gray-400">
-          Progression basée sur routines + série + temps
+          Progress based on routines + streak + time
         </div>
       </div>
 
@@ -79,7 +79,7 @@ export default function GradeProgress({ stats }: GradeProgressProps) {
                   <div>
                     <p className="font-bold text-gray-900 dark:text-white text-lg">{grade.name}</p>
                     <p className="text-sm text-gray-600 dark:text-gray-400">
-                      {grade.routines} routines · {grade.streak} jours · {grade.timeHours}h
+                      {grade.routines} routines · {grade.streak} days · {grade.timeHours}h
                     </p>
                   </div>
                 </div>
@@ -87,7 +87,7 @@ export default function GradeProgress({ stats }: GradeProgressProps) {
                 <div className="flex items-center gap-2">
                   {isCurrentGrade && (
                     <span className="px-3 py-1 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-full text-sm font-semibold shadow-md">
-                      🎯 Actuel
+                      🎯 Current
                     </span>
                   )}
                   {hasAchieved && !isCurrentGrade && (
@@ -126,7 +126,7 @@ export default function GradeProgress({ stats }: GradeProgressProps) {
                         <span>+{routinesDiff} routines</span>
                       )}
                       {streakDiff > 0 && (
-                        <span>+{streakDiff} jours</span>
+                        <span>+{streakDiff} days</span>
                       )}
                       {timeDiff > 0 && (
                         <span>+{Math.ceil(timeDiff)}h</span>
@@ -135,7 +135,7 @@ export default function GradeProgress({ stats }: GradeProgressProps) {
                   )}
                   {hasAchieved && (
                     <span className="text-xs font-bold text-green-600 dark:text-green-400">
-                      ✓ Débloqué
+                      ✓ Unlocked
                     </span>
                   )}
                 </div>
@@ -145,10 +145,10 @@ export default function GradeProgress({ stats }: GradeProgressProps) {
               {isCurrentGrade && !hasAchieved && index < GRADES.length - 1 && (
                 <div className="mt-3 p-2 bg-white dark:bg-gray-800 rounded-lg border border-indigo-200 dark:border-indigo-800">
                   <p className="text-xs text-center text-indigo-600 dark:text-indigo-400 font-medium">
-                    🎯 Objectif:{' '}
+                    🎯 Goal:{' '}
                     {routinesDiff > 0 && `${routinesDiff} routine${routinesDiff > 1 ? 's' : ''}`}
                     {routinesDiff > 0 && (streakDiff > 0 || timeDiff > 0) && ' + '}
-                    {streakDiff > 0 && `${streakDiff} jour${streakDiff > 1 ? 's' : ''}`}
+                    {streakDiff > 0 && `${streakDiff} day${streakDiff > 1 ? 's' : ''}`}
                     {streakDiff > 0 && timeDiff > 0 && ' + '}
                     {timeDiff > 0 && `${Math.ceil(timeDiff)}h`}
                   </p>
