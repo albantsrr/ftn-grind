@@ -16,9 +16,9 @@ router = APIRouter()
 
 
 # Helper function to calculate grade based on routines completed, streak, and time
-def calculate_grade(routines_completed: int, current_streak: int, total_time_seconds: int) -> str:
+def calculate_grade(routines_completed: int, longest_streak: int, total_time_seconds: int) -> str:
     """
-    Calculate user grade based on routines completed, current streak, and total time.
+    Calculate user grade based on routines completed, longest streak, and total time.
 
     Grade requirements (all 3 must be met):
     - Bronze: 10 routines + 5 days streak + 1 hour
@@ -34,27 +34,27 @@ def calculate_grade(routines_completed: int, current_streak: int, total_time_sec
 
     # Check grades from highest to lowest
     if (routines_completed >= GradeRequirements.LEGEND["routines"] and
-        current_streak >= GradeRequirements.LEGEND["streak"] and
+        longest_streak >= GradeRequirements.LEGEND["streak"] and
         total_time_hours >= GradeRequirements.LEGEND["time_hours"]):
         return "Legend"
     elif (routines_completed >= GradeRequirements.DIAMOND["routines"] and
-          current_streak >= GradeRequirements.DIAMOND["streak"] and
+          longest_streak >= GradeRequirements.DIAMOND["streak"] and
           total_time_hours >= GradeRequirements.DIAMOND["time_hours"]):
         return "Diamond"
     elif (routines_completed >= GradeRequirements.PLATINUM["routines"] and
-          current_streak >= GradeRequirements.PLATINUM["streak"] and
+          longest_streak >= GradeRequirements.PLATINUM["streak"] and
           total_time_hours >= GradeRequirements.PLATINUM["time_hours"]):
         return "Platinum"
     elif (routines_completed >= GradeRequirements.GOLD["routines"] and
-          current_streak >= GradeRequirements.GOLD["streak"] and
+          longest_streak >= GradeRequirements.GOLD["streak"] and
           total_time_hours >= GradeRequirements.GOLD["time_hours"]):
         return "Gold"
     elif (routines_completed >= GradeRequirements.SILVER["routines"] and
-          current_streak >= GradeRequirements.SILVER["streak"] and
+          longest_streak >= GradeRequirements.SILVER["streak"] and
           total_time_hours >= GradeRequirements.SILVER["time_hours"]):
         return "Silver"
     elif (routines_completed >= GradeRequirements.BRONZE["routines"] and
-          current_streak >= GradeRequirements.BRONZE["streak"] and
+          longest_streak >= GradeRequirements.BRONZE["streak"] and
           total_time_hours >= GradeRequirements.BRONZE["time_hours"]):
         return "Bronze"
     else:
@@ -253,8 +253,8 @@ async def get_user_stats(
     # Calculate streaks
     current_streak, longest_streak = calculate_streak(db, current_user.id)
 
-    # Calculate grade
-    grade = calculate_grade(total_completed, current_streak, total_time)
+    # Calculate grade based on longest streak (not current streak)
+    grade = calculate_grade(total_completed, longest_streak, total_time)
 
     logger.info(f"User {current_user.id} stats: {total_completed} completed, {current_streak} streak, {total_time}s time, {grade} grade")
 

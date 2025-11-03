@@ -18,6 +18,14 @@ const GRADES = GRADE_ORDER.map(name => ({
 export default function GradeProgress({ stats }: GradeProgressProps) {
   const [progressValues, setProgressValues] = useState<number[]>([0, 0, 0, 0, 0, 0]);
 
+  // Find the next grade to achieve (first non-achieved grade)
+  const currentTimeHours = stats.total_time_seconds / 3600;
+  const nextGradeIndex = GRADES.findIndex(grade => {
+    return stats.total_routines_completed < grade.routines ||
+           stats.longest_streak < grade.streak ||
+           currentTimeHours < grade.timeHours;
+  });
+
   useEffect(() => {
     // Animate progress bars
     const timer = setTimeout(() => {
@@ -141,16 +149,16 @@ export default function GradeProgress({ stats }: GradeProgressProps) {
                 </div>
               </div>
 
-              {/* Call to action for next grade */}
-              {isCurrentGrade && !hasAchieved && index < GRADES.length - 1 && (
+              {/* Call to action for next grade to achieve */}
+              {index === nextGradeIndex && !hasAchieved && (
                 <div className="mt-3 p-2 bg-white dark:bg-gray-800 rounded-lg border border-indigo-200 dark:border-indigo-800">
                   <p className="text-xs text-center text-indigo-600 dark:text-indigo-400 font-medium">
-                    🎯 Goal:{' '}
-                    {routinesDiff > 0 && `${routinesDiff} routine${routinesDiff > 1 ? 's' : ''}`}
-                    {routinesDiff > 0 && (streakDiff > 0 || timeDiff > 0) && ' + '}
-                    {streakDiff > 0 && `${streakDiff} day${streakDiff > 1 ? 's' : ''}`}
-                    {streakDiff > 0 && timeDiff > 0 && ' + '}
-                    {timeDiff > 0 && `${Math.ceil(timeDiff)}h`}
+                    🎯 Next goal: {grade.name} -{' '}
+                    {routinesDiff > 0 && `${routinesDiff} more routine${routinesDiff > 1 ? 's' : ''}`}
+                    {routinesDiff > 0 && (streakDiff > 0 || timeDiff > 0) && ', '}
+                    {streakDiff > 0 && `${streakDiff} more day${streakDiff > 1 ? 's' : ''} streak`}
+                    {streakDiff > 0 && timeDiff > 0 && ', '}
+                    {timeDiff > 0 && `${Math.ceil(timeDiff)} more hours`}
                   </p>
                 </div>
               )}

@@ -339,7 +339,7 @@ export default function Community() {
                   onClick={loadCommunityRoutines}
                   className="mt-4 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors"
                 >
-                  Réessayer
+                  Try again
                 </button>
               </div>
             ) : routines.length === 0 ? (
@@ -419,7 +419,7 @@ export default function Community() {
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-md w-full p-6 space-y-6">
             <div className="flex items-start justify-between">
               <div>
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Noter la routine</h2>
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Rate the routine</h2>
                 <p className="text-gray-600 dark:text-gray-400 mt-1">{selectedRoutine.nom}</p>
               </div>
               <button onClick={closeRatingModal} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
@@ -430,7 +430,7 @@ export default function Community() {
             </div>
 
             <div className="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-4">
-              <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">Note moyenne :</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">Average rating :</p>
               <RatingStars
                 rating={selectedRoutine.average_rating || 0}
                 totalRatings={selectedRoutine.total_ratings || 0}
@@ -441,7 +441,7 @@ export default function Community() {
 
             <div>
               <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
-                {userRating > 0 ? 'Modifier votre note :' : 'Votre note :'}
+                {userRating > 0 ? ' Edit your rating :' : 'Your rating :'}
               </p>
               <RatingStars
                 rating={userRating}
@@ -463,14 +463,14 @@ export default function Community() {
                   onClick={handleDeleteRating}
                   className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 font-medium"
                 >
-                  Supprimer ma note
+                  Delete my rating
                 </button>
               )}
               <button
                 onClick={closeRatingModal}
                 className="ml-auto bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-white px-6 py-2 rounded-lg font-medium"
               >
-                Fermer
+                Close
               </button>
             </div>
           </div>

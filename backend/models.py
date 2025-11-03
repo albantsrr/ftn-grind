@@ -91,6 +91,7 @@ class RoutineStep(Base):
     duree = Column(Integer, nullable=False)  # Duration in seconds
     tips = Column(String, nullable=True)
     order = Column(Integer, nullable=False)  # Order of step in routine
+    game_type = Column(String, default="fortnite")  # Game type: 'fortnite' or 'kovaaks'
 
     # Relationship with routine
     routine = relationship("Routine", back_populates="steps")
@@ -166,6 +167,7 @@ class RoutineStepBase(BaseModel):
     code_map: str
     duree: int
     tips: Optional[str] = None
+    game_type: Optional[str] = "fortnite"
 
 
 class RoutineStepCreate(RoutineStepBase):
@@ -176,6 +178,7 @@ class RoutineStepResponse(RoutineStepBase):
     id: int
     routine_id: int
     order: int
+    game_type: str
 
     model_config = ConfigDict(from_attributes=True)
 

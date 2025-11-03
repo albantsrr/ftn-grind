@@ -18,7 +18,7 @@ export default function CreateRoutine() {
   const [imageUrl, setImageUrl] = useState('/default_image.jpg');
   const [selectedTags, setSelectedTags] = useState<Tag[]>([]);
   const [steps, setSteps] = useState<Omit<RoutineStep, 'id' | 'routine_id' | 'order'>[]>([
-    { nom: '', code_map: '', duree: 60, tips: '' }
+    { nom: '', code_map: '', duree: 60, tips: '', game_type: 'fortnite' }
   ]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -28,7 +28,7 @@ export default function CreateRoutine() {
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
   const addStep = () => {
-    setSteps([...steps, { nom: '', code_map: '', duree: 60, tips: '' }]);
+    setSteps([...steps, { nom: '', code_map: '', duree: 60, tips: '', game_type: 'fortnite' }]);
   };
 
   const removeStep = (index: number) => {
@@ -98,8 +98,13 @@ export default function CreateRoutine() {
     }
 
     for (const step of steps) {
-      if (!step.nom.trim() || !step.code_map.trim()) {
-        setError('All steps must have a name and map code');
+      if (!step.nom.trim()) {
+        setError('All steps must have a name');
+        return;
+      }
+      // Map code is only required for Fortnite
+      if ((step.game_type || 'fortnite') === 'fortnite' && !step.code_map.trim()) {
+        setError('All Fortnite steps must have a map code');
         return;
       }
     }

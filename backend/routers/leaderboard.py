@@ -177,8 +177,8 @@ async def get_leaderboard(
     # Apply pagination
     paginated_entries = leaderboard_entries[offset:offset + limit]
 
-    # Get current season (month-year)
-    season = datetime.now().strftime("%B %Y")
+    # Get current season (year only)
+    season = datetime.now().strftime("%Y")
 
     return {
         'entries': paginated_entries,

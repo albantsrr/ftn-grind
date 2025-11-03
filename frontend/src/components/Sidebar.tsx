@@ -91,6 +91,12 @@ export default function Sidebar({ onLogout, username, subscriptionTier = 'free',
           active={location.pathname === '/statistics'}
         />
         <NavItem
+          to="/ingame-stats"
+          icon="🎮"
+          label="Ingame Statistics"
+          disabled={true}
+        />
+        <NavItem
           to="/billing"
           icon="💳"
           label="Billing"

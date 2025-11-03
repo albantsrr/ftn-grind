@@ -103,7 +103,8 @@ def create_routine(
             code_map=step_data.code_map,
             duree=step_data.duree,
             tips=step_data.tips,
-            order=index
+            order=index,
+            game_type=step_data.game_type or "fortnite"
         )
         db.add(new_step)
 
@@ -166,7 +167,8 @@ def update_routine(
                 code_map=step_data.code_map,
                 duree=step_data.duree,
                 tips=step_data.tips,
-                order=index
+                order=index,
+                game_type=step_data.game_type or "fortnite"
             )
             db.add(new_step)
 

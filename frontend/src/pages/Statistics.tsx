@@ -124,7 +124,7 @@ export default function Statistics() {
                 <GradeBadge
                   grade={stats.grade}
                   currentRoutines={stats.total_routines_completed}
-                  currentStreak={stats.current_streak}
+                  currentStreak={stats.longest_streak}
                   currentTimeSeconds={stats.total_time_seconds}
                 />
 

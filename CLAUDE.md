@@ -107,7 +107,7 @@ The backend uses a modular router pattern with SQLAlchemy ORM:
 - `routers/ratings.py`: Routine rating system (1-5 stars)
 - `routers/subscriptions.py`: Stripe subscription management (checkout, webhooks, portal)
 - `routers/statistics.py`: User statistics and analytics (Premium only, grade system, streaks)
-- `routers/timer.py`: Timer execution with asyncio
+- `routers/leaderboard.py`: Global and friends leaderboard (Premium only, scoring system)
 
 **Database Schema (French field names):**
 ```
@@ -198,6 +198,11 @@ routine_ratings:
 - `GET /api/statistics/chart-data`: Get 30-day chart data (routines/day, duration/day)
 - `GET /api/statistics/sessions/recent`: Get recent sessions (default limit: 10)
 
+*Leaderboard (Premium only):*
+- `GET /api/leaderboard/global`: Get global leaderboard rankings (paginated, with filters)
+- `GET /api/leaderboard/friends`: Get friends leaderboard rankings (requires friendships)
+- `GET /api/leaderboard/me`: Get current user's leaderboard position and stats
+
 **Environments:**
 - Dev: `http://localhost:3000` (SQLite, local testing)
 - Prod: `http://72.61.166.22` (PostgreSQL+Docker on VPS)
@@ -234,6 +239,7 @@ Page-based routing structure:
 - `Settings.tsx`: User profile and settings (route: `/settings`)
 - `Billing.tsx`: Subscription management (route: `/billing`) - upgrade, portal, status
 - `Statistics.tsx`: User stats and charts (route: `/statistics`) - **Premium only**
+- `Leaderboard.tsx`: Global and friends rankings (route: `/leaderboard`) - **Premium only**
 
 **Key Components:**
 - `RoutineCard.tsx`: Routine display card with actions
@@ -302,15 +308,21 @@ See [ENVIRONMENTS.md](frontend/ENVIRONMENTS.md).
 - **Free:** 2 routines max, no statistics, community access
 - **Premium:** Unlimited routines, statistics with charts, grades, streak tracking
 
-**Grade System:** Based on routines completed + current streak:
-- Bronze: 5 routines + 3 days streak
-- Silver: 20 routines + 7 days streak
-- Gold: 50 routines + 15 days streak
-- Platinum: 100 routines + 30 days streak
-- Diamond: 250 routines + 60 days streak
-- Legend: 500 routines + 100 days streak
+**Grade System:** Based on routines completed + current streak + time spent:
+- Bronze: 10 routines + 5 days streak + 1 hour
+- Silver: 50 routines + 15 days streak + 5 hours
+- Gold: 150 routines + 30 days streak + 15 hours
+- Platinum: 300 routines + 60 days streak + 30 hours
+- Diamond: 600 routines + 120 days streak + 60 hours
+- Legend: 1000 routines + 200 days streak + 100 hours
 
 **Streak Calculation:** Consecutive days with at least one completed routine. Breaks if no activity for 2+ days.
+
+**Leaderboard Scoring System:** Score calculated as: `routines * 10 + streak * 5 + time_hours * 2`
+- Users ranked by total score (higher is better)
+- Supports global and friends-only leaderboards
+- Premium feature only
+- Includes user's current rank, total score, and grade level
 
 **Premium Access Control:**
 - Backend: Use `require_premium` dependency in route decorators for Premium-only endpoints
@@ -383,10 +395,12 @@ See [QUICK_RELEASE.md](docs/release/QUICK_RELEASE.md) or [RELEASE.md](docs/relea
 - ✅ **Subscription system (Stripe integration, Free/Premium tiers)**
 - ✅ **Statistics & analytics (Premium only: grades, streaks, charts)**
 - ✅ **Routine session tracking for statistics**
+- ✅ **Leaderboard system (Premium only: global and friends rankings)**
 
 **Planned:** V2 (custom domain + HTTPS) → V3 (React Native mobile app) → V4 (advanced analytics, coaching AI)
 
 **Recent Updates:**
+- ✅ Leaderboard system with global and friends rankings (v1.0.8)
 - ✅ Stripe subscription system with checkout and webhooks
 - ✅ Statistics system with grade levels (Bronze → Legend) and streak tracking
 - ✅ Routine session tracking for workout analytics

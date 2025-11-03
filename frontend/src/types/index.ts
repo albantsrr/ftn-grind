@@ -1,3 +1,5 @@
+export type GameType = 'fortnite' | 'kovaaks';
+
 export interface RoutineStep {
   id?: number;
   routine_id?: number;
@@ -6,6 +8,7 @@ export interface RoutineStep {
   duree: number;
   tips?: string;
   order?: number;
+  game_type?: GameType;
 }
 
 export type SoundType = 'beep' | 'bell' | 'chime' | 'notification';

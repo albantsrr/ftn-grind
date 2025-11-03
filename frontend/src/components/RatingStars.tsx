@@ -111,7 +111,7 @@ export default function RatingStars({
             )}
           </>
         ) : (
-          <span>Pas encore noté</span>
+          <span>Not yet rated</span>
         )}
       </div>
     </div>

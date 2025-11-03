@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { GRADE_REQUIREMENTS, GRADE_BADGES, GRADE_COLORS, getNextGradeRequirements, type GradeName } from '../config/grades';
+import { GRADE_REQUIREMENTS, GRADE_BADGES, GRADE_COLORS, GRADE_ORDER, type GradeName } from '../config/grades';
 
 interface GradeBadgeProps {
   grade: string;
@@ -12,7 +12,16 @@ export default function GradeBadge({ grade, currentRoutines, currentStreak, curr
   const [progress, setProgress] = useState(0);
   const currentTimeHours = currentTimeSeconds / 3600;
 
-  const nextRequirements = getNextGradeRequirements(grade as GradeName);
+  // Find the actual next grade to achieve based on current stats (not just grade+1)
+  const nextGradeIndex = GRADE_ORDER.findIndex(gradeName => {
+    const requirements = GRADE_REQUIREMENTS[gradeName];
+    return currentRoutines < requirements.routines ||
+           currentStreak < requirements.streak ||
+           currentTimeHours < requirements.timeHours;
+  });
+
+  const nextGradeName = nextGradeIndex !== -1 ? GRADE_ORDER[nextGradeIndex] : null;
+  const nextRequirements = nextGradeName ? GRADE_REQUIREMENTS[nextGradeName] : null;
 
   useEffect(() => {
     // Animate progress on mount
@@ -34,10 +43,6 @@ export default function GradeBadge({ grade, currentRoutines, currentStreak, curr
   const routinesRemaining = nextRequirements ? Math.max(0, nextRequirements.routines - currentRoutines) : 0;
   const streakRemaining = nextRequirements ? Math.max(0, nextRequirements.streak - currentStreak) : 0;
   const timeRemaining = nextRequirements ? Math.max(0, nextRequirements.timeHours - currentTimeHours) : 0;
-
-  const nextGradeName = nextRequirements ? Object.keys(GRADE_REQUIREMENTS).find(
-    g => GRADE_REQUIREMENTS[g as GradeName] === nextRequirements
-  ) : null;
 
   return (
     <div className={`bg-gradient-to-r ${GRADE_COLORS[grade as GradeName]} rounded-xl shadow-2xl p-8 text-white relative overflow-hidden`}>

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { RoutineStep } from '../types';
+import type { RoutineStep, GameType } from '../types';
 
 interface StepCardProps {
   step: Omit<RoutineStep, 'id' | 'routine_id' | 'order'>;
@@ -149,6 +149,36 @@ export default function StepCard({
         <div className="p-4 space-y-4">
           <div>
             <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
+              Game Type *
+            </label>
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => onUpdate('game_type', 'fortnite')}
+                className={`flex-1 px-4 py-2.5 rounded-lg font-medium transition-all ${
+                  (step.game_type || 'fortnite') === 'fortnite'
+                    ? 'bg-indigo-600 text-white shadow-lg'
+                    : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                }`}
+              >
+                🎮 Fortnite
+              </button>
+              <button
+                type="button"
+                onClick={() => onUpdate('game_type', 'kovaaks')}
+                className={`flex-1 px-4 py-2.5 rounded-lg font-medium transition-all ${
+                  step.game_type === 'kovaaks'
+                    ? 'bg-indigo-600 text-white shadow-lg'
+                    : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                }`}
+              >
+                🎯 Kovaak's
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
               Exercise Name *
             </label>
             <input
@@ -161,35 +191,66 @@ export default function StepCard({
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
-              Map Code *
-            </label>
-            <input
-              type="text"
-              value={step.code_map}
-              onChange={(e) => onUpdate('code_map', e.target.value)}
-              placeholder="1234-5678-9999"
-              className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent font-mono transition-shadow"
-              required
-            />
-          </div>
+          {(step.game_type || 'fortnite') === 'fortnite' && (
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
+                Map Code *
+              </label>
+              <input
+                type="text"
+                value={step.code_map}
+                onChange={(e) => onUpdate('code_map', e.target.value)}
+                placeholder="1234-5678-9999"
+                className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent font-mono transition-shadow"
+                required
+              />
+            </div>
+          )}
 
           <div>
             <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
               Duration *
             </label>
             <div className="flex items-center gap-3">
-              <input
-                type="number"
-                value={step.duree}
-                onChange={(e) => onUpdate('duree', parseInt(e.target.value) || 0)}
-                min="1"
-                className="flex-1 px-4 py-2.5 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-shadow"
-                required
-              />
+              <div className="flex-1 flex gap-2">
+                <div className="flex-1">
+                  <input
+                    type="number"
+                    value={Math.floor(step.duree / 60)}
+                    onChange={(e) => {
+                      const minutes = parseInt(e.target.value) || 0;
+                      const seconds = step.duree % 60;
+                      onUpdate('duree', minutes * 60 + seconds);
+                    }}
+                    min="0"
+                    placeholder="0"
+                    className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-shadow"
+                  />
+                  <label className="block text-xs text-gray-500 dark:text-gray-400 mt-1 text-center">
+                    Minutes
+                  </label>
+                </div>
+                <div className="flex-1">
+                  <input
+                    type="number"
+                    value={step.duree % 60}
+                    onChange={(e) => {
+                      const seconds = parseInt(e.target.value) || 0;
+                      const minutes = Math.floor(step.duree / 60);
+                      onUpdate('duree', minutes * 60 + seconds);
+                    }}
+                    min="0"
+                    max="59"
+                    placeholder="0"
+                    className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-shadow"
+                  />
+                  <label className="block text-xs text-gray-500 dark:text-gray-400 mt-1 text-center">
+                    Seconds
+                  </label>
+                </div>
+              </div>
               <span className="text-sm text-gray-500 dark:text-gray-400 font-medium min-w-[4rem]">
-                {formatDuration(step.duree)}
+                = {formatDuration(step.duree)}
               </span>
             </div>
           </div>

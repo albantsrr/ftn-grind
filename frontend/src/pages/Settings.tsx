@@ -390,38 +390,80 @@ export default function Settings() {
               </div>
 
               <div className="space-y-4">
-                <div className="flex items-center justify-between p-4 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-lg border border-green-200 dark:border-green-800">
+                <div className={`flex items-center justify-between p-4 rounded-lg border-2 ${
+                  user?.subscription_tier === 'premium'
+                    ? 'bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 border-purple-500 dark:border-purple-400'
+                    : 'bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border-green-500 dark:border-green-400'
+                }`}>
                   <div>
-                    <p className="text-lg font-bold text-gray-900 dark:text-white">Free Plan</p>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">Access to all basic features</p>
+                    <p className="text-lg font-bold text-gray-900 dark:text-white">
+                      {user?.subscription_tier === 'premium' ? '⭐ Premium Plan' : 'Free Plan'}
+                    </p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      {user?.subscription_tier === 'premium'
+                        ? 'Access to all features and statistics'
+                        : 'Access to basic features'}
+                    </p>
                   </div>
-                  <div className="px-4 py-2 bg-green-500 text-white rounded-lg font-bold">
+                  <div className={`px-4 py-2 rounded-lg font-bold ${
+                    user?.subscription_tier === 'premium'
+                      ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white'
+                      : 'bg-green-500 text-white'
+                  }`}>
                     ACTIVE
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Routines Created</p>
-                    <p className="text-2xl font-bold text-gray-900 dark:text-white">Unlimited</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Routine Access</p>
+                    <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                      {user?.subscription_tier === 'premium' ? '✓ Unlimited' : '2 Routines'}
+                    </p>
                   </div>
                   <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
                     <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Community Access</p>
                     <p className="text-2xl font-bold text-gray-900 dark:text-white">✓ Included</p>
                   </div>
+                  {user?.subscription_tier === 'premium' && (
+                    <>
+                      <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Statistics</p>
+                        <p className="text-2xl font-bold text-gray-900 dark:text-white">✓ Full Access</p>
+                      </div>
+                      <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Leaderboard</p>
+                        <p className="text-2xl font-bold text-gray-900 dark:text-white">✓ Enabled</p>
+                      </div>
+                    </>
+                  )}
                 </div>
 
-                <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                    🚀 Premium features coming soon! Cloud sync, mobile apps, and much more.
-                  </p>
-                  <button
-                    disabled
-                    className="w-full px-6 py-3 bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 rounded-lg font-semibold cursor-not-allowed"
-                  >
-                    Upgrade to Premium (Coming Soon)
-                  </button>
-                </div>
+                {user?.subscription_tier === 'premium' ? (
+                  <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                      ⭐ You have full access to all premium features!
+                    </p>
+                    <button
+                      onClick={() => navigate('/billing')}
+                      className="w-full px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-lg font-semibold transition-all shadow-lg"
+                    >
+                      Manage Subscription
+                    </button>
+                  </div>
+                ) : (
+                  <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                      🚀 Upgrade to Premium for unlimited routines, statistics, leaderboard, and more!
+                    </p>
+                    <button
+                      onClick={() => navigate('/billing')}
+                      className="w-full px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-lg font-semibold transition-all shadow-lg hover:shadow-xl"
+                    >
+                      Upgrade to Premium
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
 
