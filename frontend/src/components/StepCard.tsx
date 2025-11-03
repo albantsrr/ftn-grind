@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { RoutineStep, GameType } from '../types';
+import type { RoutineStep } from '../types';
 
 interface StepCardProps {
   step: Omit<RoutineStep, 'id' | 'routine_id' | 'order'>;
