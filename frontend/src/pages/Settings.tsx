@@ -10,7 +10,7 @@ import { useToast } from '../hooks/useToast';
 
 export default function Settings() {
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const { user, logout, refreshUser } = useAuth();
   const { toasts, removeToast, success, error: showError } = useToast();
 
   // Profile form state
@@ -109,10 +109,8 @@ export default function Settings() {
     try {
       await api.updateAvatar(base64Image);
       success('✅ Avatar updated successfully');
-      // Refresh user data to get updated avatar
-      const updatedUser = await api.getCurrentUser();
-      localStorage.setItem('fortiflow_user', JSON.stringify(updatedUser));
-      window.location.reload(); // Reload to update context
+      // Refresh user data in context to get updated avatar
+      await refreshUser();
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to upload avatar';
       throw new Error(errorMessage);

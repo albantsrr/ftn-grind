@@ -148,60 +148,7 @@ routine_ratings:
   - Unique constraint: one rating per user per routine
 ```
 
-**Key API Endpoints:**
-
-*Authentication:*
-- `POST /api/auth/login`: Login with username/password (returns JWT)
-- `POST /api/auth/register`: Register new user (sends verification email)
-- `GET /api/auth/me`: Get current user info
-- `POST /api/auth/verify-email`: Verify email with token
-- `POST /api/auth/resend-verification`: Resend verification email
-- `POST /api/auth/forgot-password`: Request password reset (sends email)
-- `POST /api/auth/reset-password`: Reset password with token
-- `PUT /api/auth/update-profile`: Update user profile
-- `POST /api/auth/change-password`: Change password (requires current password)
-
-*Routines (Protected):*
-- `GET /api/routines/`: List user's routines
-- `POST /api/routines/`: Create routine with steps
-- `PUT /api/routines/{id}`: Update routine and/or steps
-- `DELETE /api/routines/{id}`: Delete routine (cascades to steps)
-
-*Community:*
-- `GET /api/community/routines`: List public routines with search/filters (search, author, tags, sort_by)
-- `POST /api/community/routines/{id}/share`: Toggle routine public/private status
-
-*Tags:*
-- `GET /api/tags/`: List all available tags
-- `POST /api/tags/routines/{id}/tags`: Add tag to routine
-- `DELETE /api/tags/routines/{id}/tags/{tag_id}`: Remove tag from routine
-
-*Ratings:*
-- `POST /api/ratings/routines/{id}/rate`: Rate a routine (1-5 stars)
-- `GET /api/ratings/routines/{id}/rating`: Get rating info (average, total, user's rating)
-- `DELETE /api/ratings/routines/{id}/rate`: Delete user's rating
-
-*Timer:*
-- `POST /api/timer/start-routine/{id}`: Execute routine with asyncio.sleep() sequencing
-- `GET /api/timer/routine-preview/{id}`: Preview routine duration
-
-*Subscriptions:*
-- `POST /api/subscriptions/create-checkout-session`: Create Stripe checkout session (redirect to Stripe)
-- `GET /api/subscriptions/portal`: Create Stripe Customer Portal session (manage subscription)
-- `GET /api/subscriptions/status`: Get current user's subscription status
-- `POST /api/subscriptions/webhook`: Stripe webhook handler (checkout.session.completed, customer.subscription.*)
-
-*Statistics (Premium only):*
-- `POST /api/statistics/session/start`: Start tracking a routine session
-- `POST /api/statistics/session/{id}/complete`: Mark session as completed with duration
-- `GET /api/statistics/me`: Get user stats (total completed, time, streaks, grade)
-- `GET /api/statistics/chart-data`: Get 30-day chart data (routines/day, duration/day)
-- `GET /api/statistics/sessions/recent`: Get recent sessions (default limit: 10)
-
-*Leaderboard (Premium only):*
-- `GET /api/leaderboard/global`: Get global leaderboard rankings (paginated, with filters)
-- `GET /api/leaderboard/friends`: Get friends leaderboard rankings (requires friendships)
-- `GET /api/leaderboard/me`: Get current user's leaderboard position and stats
+**Key API Endpoints:** Auth (login, register, verify, reset password) | Routines (CRUD) | Community (public listing, share) | Tags (categorization) | Ratings (1-5 stars) | Timer (execution) | Subscriptions (Stripe checkout, portal, webhooks) | Statistics (Premium: sessions, charts, grades) | Leaderboard (Premium: global/friends rankings). See `/docs` for interactive API reference.
 
 **Environments:**
 - Dev: `http://localhost:3000` (SQLite, local testing)
@@ -296,75 +243,25 @@ See [ENVIRONMENTS.md](frontend/ENVIRONMENTS.md).
 
 **Step Ordering:** `order` field (int) determines execution sequence, set automatically on creation.
 
-**Configuration:** All backend configuration centralized in `backend/config.py` including:
-- Environment variables (SECRET_KEY, Stripe, SendGrid)
-- Subscription limits (FREE_MAX_ROUTINES: 2, PREMIUM: unlimited)
-- Community settings (pagination, search)
-- Rating settings (1-5 stars)
-- Default tags (8 pre-seeded tags)
-- Grade requirements (Bronze → Legend based on routines completed + streak)
+**Configuration:** All config centralized in `backend/config.py` (env vars, limits, defaults). See [docs/backend/SUBSCRIPTIONS-COMPREHENSIVE.md](docs/backend/SUBSCRIPTIONS-COMPREHENSIVE.md) for details.
 
 **Subscription Tiers:**
-- **Free:** 2 routines max, no statistics, community access
-- **Premium:** Unlimited routines, statistics with charts, grades, streak tracking
+- **Free:** 2 routines max, no community/statistics
+- **Premium (€3.99/month):** Unlimited routines, community access, statistics (grades/streaks/charts), leaderboard
 
-**Grade System:** Based on routines completed + current streak + time spent:
-- Bronze: 10 routines + 5 days streak + 1 hour
-- Silver: 50 routines + 15 days streak + 5 hours
-- Gold: 150 routines + 30 days streak + 15 hours
-- Platinum: 300 routines + 60 days streak + 30 hours
-- Diamond: 600 routines + 120 days streak + 60 hours
-- Legend: 1000 routines + 200 days streak + 100 hours
+**Premium Access:**
+- Backend: `require_premium` dependency on protected routes
+- Frontend: `<PremiumRoute>` wrapper or check `user.subscription_tier === 'premium'`
 
-**Streak Calculation:** Consecutive days with at least one completed routine. Breaks if no activity for 2+ days.
+**Community:** Public routine sharing, tags (8 defaults), 5-star ratings, search/filters, pagination. See [docs/guides/COMMUNITY-COMPREHENSIVE.md](docs/guides/COMMUNITY-COMPREHENSIVE.md).
 
-**Leaderboard Scoring System:** Score calculated as: `routines * 10 + streak * 5 + time_hours * 2`
-- Users ranked by total score (higher is better)
-- Supports global and friends-only leaderboards
-- Premium feature only
-- Includes user's current rank, total score, and grade level
+**Statistics:** Session tracking → grade levels (Bronze→Legend) based on completed routines + streak + time. Streaks break after 2+ days inactive. Leaderboard scoring: `routines*10 + streak*5 + time_hours*2`.
 
-**Premium Access Control:**
-- Backend: Use `require_premium` dependency in route decorators for Premium-only endpoints
-- Frontend: Use `<PremiumRoute>` wrapper for Premium-only pages or check `user.subscription_tier === 'premium'`
-- Free tier limit enforced on routine creation (max 2 routines)
-- Statistics endpoints automatically return 403 for Free users
+**Email:** SendGrid (prod) / console (dev). Verification + password reset flows. Templates in `backend/email_utils.py`.
 
-**Session Tracking Flow:**
-1. User starts routine → Frontend calls `POST /api/statistics/session/start` with routine_id
-2. Returns session_id and started_at timestamp
-3. User completes routine → Frontend calculates total_duration and calls `POST /api/statistics/session/{id}/complete`
-4. Backend updates session record with completed=true, completed_at, total_duration
-5. Statistics endpoints query routine_sessions to calculate streaks, grades, charts
+**Stripe:** Checkout → webhooks → subscription sync. Portal for management. Test card: `4242 4242 4242 4242`. See [docs/backend/SUBSCRIPTIONS-COMPREHENSIVE.md](docs/backend/SUBSCRIPTIONS-COMPREHENSIVE.md).
 
-**Community Features:**
-- **Sharing:** Users can toggle routines public/private. Public routines appear in Community page.
-- **Tags:** Pre-seeded with 8 default tags (Aim, Build, Edit, Movement, etc.). Many-to-many relationship.
-- **Ratings:** Users can rate public routines 1-5 stars. One rating per user per routine. Average is recalculated on each rating change.
-- **Search & Filters:** Community page supports searching by name, filtering by tags, filtering by author, and sorting (date/name/rating).
-- **Pagination:** Community shows 12 routines per page with navigation controls.
-- **UX Polish:** Skeleton loaders, fade-in animations, tooltips, improved error messages.
-
-**Email & Account Management:**
-- **Email Verification:** Users receive verification email after registration via SendGrid in production.
-- **Password Reset:** "Forgot password" flow with email-based token reset.
-- **Profile Settings:** Users can update username, email, full name, and password in Settings page.
-- **Email Service:** Uses SendGrid API in production (configured via environment variables), console logging in dev.
-- **Configuration:** Set `USE_REAL_EMAIL=true` and `SENDGRID_API_KEY` in backend `.env` file.
-- **Email Templates:** Professional HTML emails with FortiFlow branding in `backend/email_utils.py`.
-- **Security:** 24-hour token expiration, bcrypt password hashing, protection against email enumeration.
-
-**Stripe Integration:**
-- **Checkout Flow:** User clicks "Upgrade to Premium" → backend creates Stripe Checkout session → user redirected to Stripe → webhook handles completion
-- **Webhooks:** Handle `checkout.session.completed`, `customer.subscription.updated`, `customer.subscription.deleted`, `invoice.payment_failed`
-- **Customer Portal:** Users can manage subscription, update payment method, view invoices via Stripe Customer Portal
-- **Environment Variables:** `STRIPE_SECRET_KEY`, `STRIPE_PUBLISHABLE_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRICE_ID`
-- **Subscription Sync:** User's `subscription_tier` updated automatically via webhooks (active → premium, canceled → free)
-
-**Database Migrations:**
-- **Email Verification:** Run `backend/scripts/migrate_add_email_verification.py` to add email fields
-- **Subscriptions:** Run `backend/scripts/migrate_add_subscriptions.py` to add subscriptions, routine_sessions tables and subscription_tier to users
-- Both migrations support SQLite and PostgreSQL with idempotent operations
+**Migrations:** Run `backend/scripts/migrate_add_subscriptions.py` after pulling subscription features (supports SQLite + PostgreSQL).
 
 ## Release & Distribution
 
@@ -380,35 +277,9 @@ See [QUICK_RELEASE.md](docs/release/QUICK_RELEASE.md) or [RELEASE.md](docs/relea
 
 ## Project Status
 
-**Current Features:**
-- ✅ User authentication (JWT-based login/register)
-- ✅ Email verification and password reset (SendGrid production, console dev)
-- ✅ User profile management (update email, username, password)
-- ✅ Private routine management (CRUD with steps)
-- ✅ Timer execution with sound alerts and auto-play
-- ✅ Community system (share routines publicly)
-- ✅ Tag system (categorize routines)
-- ✅ Rating system (1-5 stars)
-- ✅ Advanced search & filters (by name, tags, author)
-- ✅ Pagination & UX polish (skeleton loaders, animations, tooltips)
-- ✅ Desktop app (Tauri v2) with automated releases
-- ✅ **Subscription system (Stripe integration, Free/Premium tiers)**
-- ✅ **Statistics & analytics (Premium only: grades, streaks, charts)**
-- ✅ **Routine session tracking for statistics**
-- ✅ **Leaderboard system (Premium only: global and friends rankings)**
+**Current Features:** Auth (JWT, email verification, password reset) | Routine management (CRUD, timer, auto-play) | Community (sharing, tags, ratings, search/filters) | Subscriptions (Stripe, Free/Premium) | Statistics (Premium: grades, streaks, charts, leaderboard) | Desktop app (Tauri v2, auto releases)
 
-**Planned:** V2 (custom domain + HTTPS) → V3 (React Native mobile app) → V4 (advanced analytics, coaching AI)
-
-**Recent Updates:**
-- ✅ Leaderboard system with global and friends rankings (v1.0.8)
-- ✅ Stripe subscription system with checkout and webhooks
-- ✅ Statistics system with grade levels (Bronze → Legend) and streak tracking
-- ✅ Routine session tracking for workout analytics
-- ✅ Premium paywall and billing page
-- ✅ Centralized configuration in `backend/config.py`
-- ✅ Database migrations for subscriptions and sessions
-- ✅ Auto-play feature for seamless routine execution
-- ✅ Production deployment ready with full VPS integration
+**Planned:** V2 (HTTPS + custom domain) → V3 (React Native mobile) → V4 (advanced analytics, AI coaching)
 
 ## Testing
 
@@ -423,13 +294,6 @@ pytest -v -s             # Verbose with output
 pytest --cov             # With coverage
 ```
 
-**Test Documentation:**
-- [docs/guides/TESTING_GUIDE.md](docs/guides/TESTING_GUIDE.md) - Testing procedures and guidelines
-- [docs/guides/TEST_COMMUNITY_FEATURES.md](docs/guides/TEST_COMMUNITY_FEATURES.md) - Manual test plan for community features
-- [docs/guides/COMMUNITY_FEATURES_SUMMARY.md](docs/guides/COMMUNITY_FEATURES_SUMMARY.md) - Feature implementation summary
-- [docs/guides/UX_IMPROVEMENTS_COMMUNITY.md](docs/guides/UX_IMPROVEMENTS_COMMUNITY.md) - UX/UI enhancements
+**Test Docs:** See [docs/guides/TESTING_GUIDE.md](docs/guides/TESTING_GUIDE.md) for procedures. Community test plan in [docs/guides/COMMUNITY-COMPREHENSIVE.md](docs/guides/COMMUNITY-COMPREHENSIVE.md).
 
-**Important Notes:**
-- Before testing new features, restart backend to apply schema changes: `Ctrl+C` then `./run_backend.sh`
-- After pulling subscription/statistics features, run migration: `python backend/scripts/migrate_add_subscriptions.py`
-- For Stripe testing, use Stripe test mode with test card: `4242 4242 4242 4242`
+**Testing Notes:** Restart backend after schema changes (`./run_backend.sh`). Run migration after pulling subscription features: `python backend/scripts/migrate_add_subscriptions.py`. Stripe test card: `4242 4242 4242 4242`.

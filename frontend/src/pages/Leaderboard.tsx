@@ -215,8 +215,8 @@ export default function Leaderboard() {
                   </div>
                 )}
 
-                {/* Current User Position (Sticky Bottom) */}
-                {data.current_user_entry && data.current_user_entry.position > 3 && (
+                {/* Current User Position (Sticky Bottom) - Only show when NOT searching */}
+                {data.current_user_entry && data.current_user_entry.position > 3 && !searchQuery && (
                   <div className="fixed bottom-8 left-1/2 transform -translate-x-1/2 z-50 w-full max-w-2xl px-4">
                     <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl shadow-2xl p-4 border-2 border-indigo-400">
                       <div className="flex items-center justify-between text-white">
