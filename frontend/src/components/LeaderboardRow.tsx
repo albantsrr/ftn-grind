@@ -7,9 +7,15 @@ interface LeaderboardRowProps {
 }
 
 export default function LeaderboardRow({ entry }: LeaderboardRowProps) {
+  // Safety check
+  if (!entry || !entry.username || !entry.grade) {
+    return null;
+  }
+
   const formatTime = (seconds: number) => {
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
+    const safeSeconds = seconds || 0;
+    const hours = Math.floor(safeSeconds / 3600);
+    const minutes = Math.floor((safeSeconds % 3600) / 60);
     if (hours > 0) return `${hours}h ${minutes}m`;
     return `${minutes}m`;
   };
@@ -75,13 +81,15 @@ export default function LeaderboardRow({ entry }: LeaderboardRowProps) {
       {/* Grade */}
       <td className="px-6 py-4 whitespace-nowrap">
         <div className="flex items-center gap-2">
-          <img
-            src={GRADE_BADGES[entry.grade as GradeName]}
-            alt={`${entry.grade} badge`}
-            className="w-8 h-8 object-contain"
-          />
+          {GRADE_BADGES[entry.grade as GradeName] && (
+            <img
+              src={GRADE_BADGES[entry.grade as GradeName]}
+              alt={`${entry.grade} badge`}
+              className="w-8 h-8 object-contain"
+            />
+          )}
           <span className="text-sm font-medium text-gray-900 dark:text-white">
-            {entry.grade}
+            {entry.grade || 'Bronze'}
           </span>
         </div>
       </td>
@@ -89,28 +97,28 @@ export default function LeaderboardRow({ entry }: LeaderboardRowProps) {
       {/* Score */}
       <td className="px-6 py-4 whitespace-nowrap">
         <div className="text-lg font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-          {entry.total_score.toLocaleString()}
+          {(entry.total_score || 0).toLocaleString()}
         </div>
       </td>
 
       {/* Routines */}
       <td className="px-6 py-4 whitespace-nowrap text-center">
         <div className="text-sm font-semibold text-green-600 dark:text-green-400">
-          {entry.total_routines_completed}
+          {entry.total_routines_completed || 0}
         </div>
       </td>
 
       {/* Streak */}
       <td className="px-6 py-4 whitespace-nowrap text-center">
         <div className="flex items-center justify-center gap-1 text-sm font-semibold text-orange-600 dark:text-orange-400">
-          🔥 {entry.current_streak}
+          🔥 {entry.current_streak || 0}
         </div>
       </td>
 
       {/* Time */}
       <td className="px-6 py-4 whitespace-nowrap text-center">
         <div className="text-sm font-medium text-blue-600 dark:text-blue-400">
-          {formatTime(entry.total_time_seconds)}
+          {formatTime(entry.total_time_seconds || 0)}
         </div>
       </td>
     </tr>

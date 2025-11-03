@@ -37,15 +37,21 @@ const PODIUM_STYLES = {
 export default function PodiumCard({ entry, position }: PodiumCardProps) {
   const styles = PODIUM_STYLES[position];
 
+  // Safety check
+  if (!entry || !entry.username || !entry.grade) {
+    return null;
+  }
+
   const formatTime = (seconds: number) => {
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
+    const safeSeconds = seconds || 0;
+    const hours = Math.floor(safeSeconds / 3600);
+    const minutes = Math.floor((safeSeconds % 3600) / 60);
     if (hours > 0) return `${hours}h ${minutes}m`;
     return `${minutes}m`;
   };
 
   const getUserInitial = () => {
-    return entry.username.charAt(0).toUpperCase();
+    return (entry.username || 'U').charAt(0).toUpperCase();
   };
 
   return (
@@ -104,13 +110,15 @@ export default function PodiumCard({ entry, position }: PodiumCardProps) {
 
         {/* Middle: Grade */}
         <div className="flex items-center justify-center gap-2 mb-4 pb-4 border-b border-gray-200 dark:border-gray-700">
-          <img
-            src={GRADE_BADGES[entry.grade as GradeName]}
-            alt={`${entry.grade} badge`}
-            className="w-10 h-10 object-contain"
-          />
+          {GRADE_BADGES[entry.grade as GradeName] && (
+            <img
+              src={GRADE_BADGES[entry.grade as GradeName]}
+              alt={`${entry.grade} badge`}
+              className="w-10 h-10 object-contain"
+            />
+          )}
           <span className="text-lg font-semibold text-gray-700 dark:text-gray-300">
-            {entry.grade}
+            {entry.grade || 'Bronze'}
           </span>
         </div>
 
@@ -119,7 +127,7 @@ export default function PodiumCard({ entry, position }: PodiumCardProps) {
           {/* Score - Large */}
           <div className="text-center">
             <div className={`text-4xl font-extrabold ${styles.textColor}`}>
-              {entry.total_score.toLocaleString()}
+              {(entry.total_score || 0).toLocaleString()}
             </div>
             <div className="text-xs text-gray-500 dark:text-gray-400 font-medium mt-1">
               Total Score
@@ -130,7 +138,7 @@ export default function PodiumCard({ entry, position }: PodiumCardProps) {
           <div className="grid grid-cols-3 gap-2 pt-2">
             <div className="text-center">
               <div className="text-sm font-bold text-gray-900 dark:text-white">
-                {entry.total_routines_completed}
+                {entry.total_routines_completed || 0}
               </div>
               <div className="text-xs text-gray-500 dark:text-gray-400">
                 Routines
@@ -139,7 +147,7 @@ export default function PodiumCard({ entry, position }: PodiumCardProps) {
 
             <div className="text-center">
               <div className="text-sm font-bold text-gray-900 dark:text-white flex items-center justify-center gap-1">
-                🔥 {entry.current_streak}
+                🔥 {entry.current_streak || 0}
               </div>
               <div className="text-xs text-gray-500 dark:text-gray-400">
                 Streak
@@ -148,7 +156,7 @@ export default function PodiumCard({ entry, position }: PodiumCardProps) {
 
             <div className="text-center">
               <div className="text-sm font-bold text-gray-900 dark:text-white">
-                {formatTime(entry.total_time_seconds)}
+                {formatTime(entry.total_time_seconds || 0)}
               </div>
               <div className="text-xs text-gray-500 dark:text-gray-400">
                 Time
