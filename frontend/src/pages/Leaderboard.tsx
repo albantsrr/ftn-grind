@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { api } from '../services/api';
@@ -26,12 +26,7 @@ export default function Leaderboard() {
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
-  // Load leaderboard
-  useEffect(() => {
-    loadLeaderboard();
-  }, [debouncedSearch]);
-
-  const loadLeaderboard = async () => {
+  const loadLeaderboard = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -46,7 +41,12 @@ export default function Leaderboard() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [debouncedSearch]);
+
+  // Load leaderboard
+  useEffect(() => {
+    loadLeaderboard();
+  }, [loadLeaderboard]);
 
   const handleLogout = () => {
     logout();

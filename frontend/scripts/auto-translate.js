@@ -163,7 +163,7 @@ function addTranslationHook(content) {
 function replaceHardcodedText(content) {
   let modifiedContent = content;
 
-  for (const [text, key] = Object.entries(translationMap)) {
+  for (const [text, key] of Object.entries(translationMap)) {
     // Escape special regex characters
     const escapedText = text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 

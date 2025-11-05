@@ -53,7 +53,7 @@ export default function AvatarUpload({ currentAvatar, onUpload, size = 'lg' }: A
 
         try {
           await onUpload(base64String);
-        } catch (err) {
+        } catch {
           setError('Failed to upload avatar');
           setPreview(currentAvatar || null);
         } finally {
@@ -61,7 +61,7 @@ export default function AvatarUpload({ currentAvatar, onUpload, size = 'lg' }: A
         }
       };
       reader.readAsDataURL(file);
-    } catch (err) {
+    } catch {
       setError('Failed to process image');
       setUploading(false);
     }

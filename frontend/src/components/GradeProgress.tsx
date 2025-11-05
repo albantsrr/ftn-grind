@@ -182,7 +182,7 @@ export default function GradeProgress({ stats }: GradeProgressProps) {
         .animate-bounce-slow {
           animation: bounce-slow 2s infinite;
         }
-        .hover\:scale-102:hover {
+        .hover\\:scale-102:hover {
           transform: scale(1.02);
         }
       `}</style>
