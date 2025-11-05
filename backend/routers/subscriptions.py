@@ -301,15 +301,39 @@ async def handle_checkout_completed(session, db: Session):
 
     customer_id = session.get("customer")
     subscription_id = session.get("subscription")
+    metadata = session.get("metadata", {})
+    user_id = metadata.get("user_id")
 
-    # Find subscription by stripe_customer_id
+    if not user_id:
+        logger.error(f"No user_id in session metadata for session: {session['id']}")
+        return
+
+    # Convert user_id to int
+    try:
+        user_id = int(user_id)
+    except ValueError:
+        logger.error(f"Invalid user_id in metadata: {user_id}")
+        return
+
+    # Find or create subscription
     subscription = db.query(Subscription).filter(
-        Subscription.stripe_customer_id == customer_id
+        Subscription.user_id == user_id
     ).first()
 
     if not subscription:
-        logger.error(f"Subscription not found for customer: {customer_id}")
-        return
+        # Create new subscription
+        subscription = Subscription(
+            user_id=user_id,
+            stripe_customer_id=customer_id,
+            subscription_status="free"
+        )
+        db.add(subscription)
+        db.flush()
+        logger.info(f"Created new subscription for user: {user_id}")
+    else:
+        # Update existing subscription with customer_id
+        subscription.stripe_customer_id = customer_id
+        logger.info(f"Updated subscription for user: {user_id}")
 
     # Get subscription details from Stripe
     stripe_subscription = stripe.Subscription.retrieve(subscription_id)
