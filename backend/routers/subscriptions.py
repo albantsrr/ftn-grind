@@ -185,6 +185,68 @@ async def get_subscription_status(
     return subscription
 
 
+@router.post("/cancel")
+async def cancel_subscription(
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Cancel the user's subscription at the end of the billing period.
+
+    The subscription will remain active until the current period ends,
+    then automatically downgrade to free tier.
+    """
+    logger.info(f"Canceling subscription for user: {current_user.email}")
+
+    try:
+        subscription = db.query(Subscription).filter(
+            Subscription.user_id == current_user.id
+        ).first()
+
+        if not subscription or not subscription.stripe_subscription_id:
+            raise HTTPException(
+                status_code=404,
+                detail="No active subscription found"
+            )
+
+        if subscription.subscription_status != "active":
+            raise HTTPException(
+                status_code=400,
+                detail="Subscription is not active"
+            )
+
+        # Cancel subscription at period end (not immediately)
+        stripe_subscription = stripe.Subscription.modify(
+            subscription.stripe_subscription_id,
+            cancel_at_period_end=True
+        )
+
+        # Update local database
+        subscription.cancel_at_period_end = True
+        db.commit()
+
+        logger.info(f"Subscription marked for cancellation at period end for user: {current_user.id}")
+
+        return {
+            "success": True,
+            "message": "Subscription will be canceled at the end of the billing period",
+            "period_end": datetime.fromtimestamp(stripe_subscription["current_period_end"]).isoformat()
+        }
+
+    except stripe.error.StripeError as e:
+        logger.error(f"Stripe error while canceling subscription: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to cancel subscription: {str(e)}"
+        )
+    except Exception as e:
+        logger.error(f"Error canceling subscription: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to cancel subscription"
+        )
+
+
 @router.post("/webhook")
 async def stripe_webhook(request: Request, db: Session = Depends(get_db)):
     """

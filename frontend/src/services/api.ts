@@ -410,6 +410,19 @@ export const api = {
     return response.json();
   },
 
+  // Cancel subscription at period end
+  async cancelSubscription(): Promise<{ success: boolean; message: string; period_end: string }> {
+    const response = await fetchWithAuth(`${API_URL}/api/subscriptions/cancel`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || 'Failed to cancel subscription');
+    }
+    return response.json();
+  },
+
   // ==================== Statistics ====================
 
   // Start a routine session

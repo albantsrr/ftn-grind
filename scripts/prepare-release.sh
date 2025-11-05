@@ -37,14 +37,13 @@ fi
 
 echo "📝 Updating version numbers..."
 
-# Update tauri.conf.json
-sed -i "s/\"version\": \"[^\"]*\"/\"version\": \"${NEW_VERSION}\"/" frontend/src-tauri/tauri.conf.json
+# Use the centralized version sync script
+node scripts/sync-version.js "${NEW_VERSION}"
 
-# Update Cargo.toml
-sed -i "s/^version = \"[^\"]*\"/version = \"${NEW_VERSION}\"/" frontend/src-tauri/Cargo.toml
-
-# Update package.json
-sed -i "s/\"version\": \"[^\"]*\"/\"version\": \"${NEW_VERSION}\"/" frontend/package.json
+if [ $? -ne 0 ]; then
+    echo "❌ Version sync failed"
+    exit 1
+fi
 
 # Update download page
 sed -i "s/Version actuelle : <strong>v[^<]*<\\/strong>/Version actuelle : <strong>v${NEW_VERSION}<\\/strong>/" docs/index.html
@@ -70,7 +69,7 @@ if [[ ! $REPLY =~ ^[Yy]$ ]]; then
 fi
 
 # Commit changes
-git add frontend/src-tauri/tauri.conf.json frontend/src-tauri/Cargo.toml frontend/package.json docs/index.html
+git add version.json frontend/src-tauri/tauri.conf.json frontend/src-tauri/Cargo.toml frontend/package.json docs/index.html
 git commit -m "chore: bump version to ${TAG_VERSION}"
 
 echo "✅ Changes committed"

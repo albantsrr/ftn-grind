@@ -10,12 +10,14 @@ FortiFlow is a desktop training application for Fortnite players. Users create t
 
 - **Frontend**: React 19 + TypeScript + Vite + TailwindCSS + React Router
 - **Backend**: FastAPI + SQLAlchemy ORM (Python 3.10-3.12)
-- **Database**: SQLite (local file: `backend/fortiflow.db`)
+- **Database**: SQLite (local file: `backend/fortiflow.db`) or PostgreSQL (production)
 - **Desktop**: Tauri v2 (Rust) - connects to cloud backend API
 - **Testing**: pytest with async support
 
-**Python Version Requirements:**
-- **Development & Production**: Python 3.10, 3.11, or 3.12 only (NOT 3.13 - dependency incompatibility)
+**⚠️ CRITICAL: Python Version Requirements**
+- **MUST use Python 3.10, 3.11, or 3.12** (NOT 3.13 due to dependency incompatibility)
+- Check version: `python --version` or `python3 --version`
+- If wrong version, install correct version and use `python3.12 -m venv venv` (or 3.10/3.11)
 - See [docs/backend/PYTHON_VERSION.md](docs/backend/PYTHON_VERSION.md) for troubleshooting
 
 ## Environment Setup
@@ -51,20 +53,33 @@ See [backend/.env.example](backend/.env.example) for template.
 cd backend
 python --version  # Must be 3.10-3.12 (NOT 3.13)
 
-# Start server (recommended)
+# Start server (recommended - handles venv setup, deps, and launch)
 ./run_backend.sh
 
-# Manual: python3 -m venv venv && source venv/bin/activate
-# pip install -r requirements.txt && uvicorn main:app --reload --port 3000
+# Manual setup (if needed):
+# python3 -m venv venv && source venv/bin/activate  # Windows: venv\Scripts\activate
+# pip install -r requirements.txt
+# uvicorn main:app --reload --host 127.0.0.1 --port 3000
 
-# Tests
+# Tests (activate venv first)
 pytest                    # All tests
 pytest tests/test_*.py   # Specific file
 pytest -v -s             # Verbose with output
 pytest --cov             # With coverage
+
+# Database migrations (after pulling new features)
+python scripts/migrate_add_subscriptions.py  # If subscription schema missing
+python scripts/migrate_add_email_verification.py  # If email verification missing
+python scripts/migrate_add_avatar.py  # If avatar field missing
 ```
 
-API at `http://localhost:3000` - docs at `/docs`, health at `/health`
+**API Endpoints:**
+- Main API: `http://localhost:3000`
+- Interactive docs: `http://localhost:3000/docs` (Swagger UI)
+- Alternative docs: `http://localhost:3000/redoc`
+- Health check: `http://localhost:3000/health`
+
+**Database:** SQLite file created automatically at `backend/fortiflow.db` on first run
 
 ### Frontend
 ```bash
@@ -156,15 +171,27 @@ routine_ratings:
 
 **Production Deployment:**
 ```bash
-# Quick deploy to VPS (from project root)
+# Quick deploy to VPS (run from backend/ directory)
 ./scripts/deploy-backend.sh
 
 # What it does:
-# 1. Syncs backend files via rsync (excludes venv, db, tests)
-# 2. Rebuilds and restarts Docker containers
-# 3. Runs health check on /health endpoint
-# 4. Shows recent logs
+# 1. Syncs backend files to VPS via rsync (excludes venv, db, tests, .env)
+# 2. Rebuilds and restarts Docker containers (PostgreSQL + FastAPI + Nginx)
+# 3. Runs health check on http://72.61.166.22/health
+# 4. Shows recent logs from the backend container
+
+# Manual deployment steps (if script fails):
+# ssh root@72.61.166.22
+# cd /opt/fortiflow/backend
+# docker compose down && docker compose up -d --build
+# docker compose logs -f backend  # Watch logs
 ```
+
+**VPS Details:**
+- IP: `72.61.166.22` (no domain yet - planned for V2)
+- Services: PostgreSQL (port 5432), FastAPI (port 8000), Nginx (port 80)
+- Config: `/opt/fortiflow/backend/docker-compose.yml`
+- Logs: `docker compose logs backend` (from VPS)
 
 See [docs/backend/DEPLOYMENT.md](docs/backend/DEPLOYMENT.md) for full deployment guide.
 
@@ -261,7 +288,11 @@ See [ENVIRONMENTS.md](frontend/ENVIRONMENTS.md).
 
 **Stripe:** Checkout → webhooks → subscription sync. Portal for management. Test card: `4242 4242 4242 4242`. See [docs/backend/SUBSCRIPTIONS-COMPREHENSIVE.md](docs/backend/SUBSCRIPTIONS-COMPREHENSIVE.md).
 
-**Migrations:** Run `backend/scripts/migrate_add_subscriptions.py` after pulling subscription features (supports SQLite + PostgreSQL).
+**Migrations:** After pulling new features, check `backend/scripts/` for migration scripts. Run them to update your local database schema:
+- `migrate_add_subscriptions.py` - Adds subscription tables and user fields
+- `migrate_add_email_verification.py` - Adds email verification fields
+- `migrate_add_avatar.py` - Adds avatar field to users
+- All migrations support both SQLite (dev) and PostgreSQL (prod)
 
 ## Release & Distribution
 
@@ -296,4 +327,35 @@ pytest --cov             # With coverage
 
 **Test Docs:** See [docs/guides/TESTING_GUIDE.md](docs/guides/TESTING_GUIDE.md) for procedures. Community test plan in [docs/guides/COMMUNITY-COMPREHENSIVE.md](docs/guides/COMMUNITY-COMPREHENSIVE.md).
 
-**Testing Notes:** Restart backend after schema changes (`./run_backend.sh`). Run migration after pulling subscription features: `python backend/scripts/migrate_add_subscriptions.py`. Stripe test card: `4242 4242 4242 4242`.
+**Testing Notes:**
+- Restart backend after schema changes: `./run_backend.sh`
+- Run migrations after pulling new features (see "Migrations" section above)
+- Stripe test card: `4242 4242 4242 4242` (any future date, any CVC)
+- Use `pytest -v -s` to see detailed output and print statements during debugging
+
+## Common Issues & Troubleshooting
+
+**Backend won't start:**
+- Check Python version: `python --version` (must be 3.10-3.12, NOT 3.13)
+- Check if SECRET_KEY is set in `backend/.env` (app will fail if missing)
+- Port 3000 already in use? Kill process: `lsof -ti:3000 | xargs kill -9` (macOS/Linux) or `netstat -ano | findstr :3000` then `taskkill /PID <pid> /F` (Windows)
+
+**Frontend can't connect to backend:**
+- Check which API URL is configured: Look at `.env.development` or `.env.production` in frontend/
+- Verify backend is running: `curl http://localhost:3000/health`
+- Check browser console for CORS errors (backend must be running with CORS enabled)
+
+**Database errors after pulling changes:**
+- Run migrations from `backend/scripts/migrate_*.py`
+- If migrations fail, backup your database and delete `backend/fortiflow.db`, then restart backend (creates fresh DB)
+
+**Tauri build fails:**
+- Ensure Rust is installed: `rustc --version` (install via rustup.rs if missing)
+- Clear cache: `cd frontend && rm -rf src-tauri/target && npm run tauri:build`
+- Check Node version: `node --version` (recommend v18 or v20 LTS)
+
+**VPS deployment issues:**
+- Verify SSH access: `ssh root@72.61.166.22`
+- Check VPS services: `ssh root@72.61.166.22 "cd /opt/fortiflow/backend && docker compose ps"`
+- View backend logs: `ssh root@72.61.166.22 "cd /opt/fortiflow/backend && docker compose logs -f backend"`
+- Health check: `curl http://72.61.166.22/health`

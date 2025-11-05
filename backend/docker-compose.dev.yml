@@ -1,0 +1,64 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database (Dev)
+  postgres_dev:
+    image: postgres:15-alpine
+    container_name: fortiflow_postgres_dev
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-fortiflow}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-fortiflow_dev}
+    volumes:
+      - postgres_dev_data:/var/lib/postgresql/data
+      - ./backups:/backups
+    ports:
+      - "5433:5432"  # Different external port to avoid conflict with prod
+    networks:
+      - fortiflow_dev_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-fortiflow}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # FastAPI Backend (Dev)
+  backend_dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: fortiflow_backend_dev
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-fortiflow}:${POSTGRES_PASSWORD}@postgres_dev:5432/${POSTGRES_DB:-fortiflow_dev}
+      SECRET_KEY: ${SECRET_KEY}
+      USE_REAL_EMAIL: ${USE_REAL_EMAIL:-false}
+      SENDGRID_API_KEY: ${SENDGRID_API_KEY}
+      FROM_EMAIL: ${FROM_EMAIL}
+      FRONTEND_URL: ${FRONTEND_URL}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
+      STRIPE_PUBLISHABLE_KEY: ${STRIPE_PUBLISHABLE_KEY}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET}
+      STRIPE_PRICE_ID: ${STRIPE_PRICE_ID}
+    depends_on:
+      postgres_dev:
+        condition: service_healthy
+    ports:
+      - "3001:8000"  # Dev backend on port 3001
+    networks:
+      - fortiflow_dev_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+volumes:
+  postgres_dev_data:
+    driver: local
+
+networks:
+  fortiflow_dev_network:
+    driver: bridge

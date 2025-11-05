@@ -12,6 +12,8 @@ export default function Billing() {
   const [loading, setLoading] = useState(true);
   const [upgrading, setUpgrading] = useState(false);
   const [managingSubscription, setManagingSubscription] = useState(false);
+  const [canceling, setCanceling] = useState(false);
+  const [showCancelModal, setShowCancelModal] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
@@ -70,6 +72,24 @@ export default function Billing() {
       console.error('Failed to create portal session:', err);
       setError(err instanceof Error ? err.message : 'Failed to open subscription management');
       setManagingSubscription(false);
+    }
+  };
+
+  const handleCancelSubscription = async () => {
+    try {
+      setCanceling(true);
+      setError(null);
+      const result = await api.cancelSubscription();
+      setSuccessMessage(result.message);
+      setShowCancelModal(false);
+      // Reload subscription status
+      await loadSubscription();
+    } catch (err) {
+      console.error('Failed to cancel subscription:', err);
+      setError(err instanceof Error ? err.message : 'Failed to cancel subscription');
+      setShowCancelModal(false);
+    } finally {
+      setCanceling(false);
     }
   };
 
@@ -221,7 +241,16 @@ export default function Billing() {
                 )}
 
                 {isPremium && isActive && (
-                  <div className="mt-6">
+                  <div className="mt-6 space-y-3">
+                    {!subscription?.cancel_at_period_end && (
+                      <button
+                        onClick={() => setShowCancelModal(true)}
+                        disabled={canceling}
+                        className="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-3 px-6 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {canceling ? 'Canceling...' : 'Cancel Subscription'}
+                      </button>
+                    )}
                     <button
                       onClick={handleManageSubscription}
                       disabled={managingSubscription}
@@ -229,8 +258,11 @@ export default function Billing() {
                     >
                       {managingSubscription ? 'Opening...' : 'Manage Subscription'}
                     </button>
-                    <p className="text-center text-sm text-gray-500 dark:text-gray-400 mt-3">
-                      Update payment method, view invoices, or cancel subscription
+                    <p className="text-center text-sm text-gray-500 dark:text-gray-400">
+                      {subscription?.cancel_at_period_end
+                        ? 'Your subscription will not renew. Manage via Stripe portal.'
+                        : 'Update payment method, view invoices, or manage settings'
+                      }
                     </p>
                   </div>
                 )}
@@ -262,6 +294,64 @@ export default function Billing() {
           )}
         </div>
       </div>
+
+      {/* Cancel Subscription Modal */}
+      {showCancelModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-md w-full p-6 border border-gray-200 dark:border-gray-700">
+            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
+              Cancel Subscription?
+            </h3>
+
+            <div className="mb-6 space-y-3">
+              <p className="text-gray-600 dark:text-gray-400">
+                Are you sure you want to cancel your Premium subscription?
+              </p>
+
+              <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4">
+                <h4 className="font-semibold text-amber-900 dark:text-amber-200 mb-2">
+                  What happens next:
+                </h4>
+                <ul className="space-y-2 text-sm text-amber-800 dark:text-amber-300">
+                  <li className="flex items-start">
+                    <span className="mr-2">•</span>
+                    <span>You'll keep Premium access until {formatDate(subscription?.current_period_end || null)}</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="mr-2">•</span>
+                    <span>After that, you'll be downgraded to the Free plan</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="mr-2">•</span>
+                    <span>You can reactivate anytime before the end date</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="mr-2">•</span>
+                    <span>No charges will be applied after cancellation</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowCancelModal(false)}
+                disabled={canceling}
+                className="flex-1 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 font-semibold py-3 px-4 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Keep Premium
+              </button>
+              <button
+                onClick={handleCancelSubscription}
+                disabled={canceling}
+                className="flex-1 bg-red-600 hover:bg-red-700 text-white font-semibold py-3 px-4 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {canceling ? 'Canceling...' : 'Yes, Cancel'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
