@@ -1,5 +1,11 @@
 # 🚀 Guide Rapide de Release
 
+## ⚠️ Configuration Initiale (Une Seule Fois)
+
+Avant votre première release avec auto-update, configurez les clés de signature :
+
+👉 **Voir : [SIGNING_KEYS_SETUP.md](SIGNING_KEYS_SETUP.md)**
+
 ## Release automatique (Recommandé)
 
 ### Méthode simple avec script

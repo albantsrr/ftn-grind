@@ -304,11 +304,13 @@ See [ENVIRONMENTS.md](frontend/ENVIRONMENTS.md).
 
 **Formats:** Windows (MSI+EXE) only (Linux/macOS builds disabled)
 
+**Auto-Update:** Tauri updater plugin integrated. Users get automatic update notifications when new releases are published. See [AUTO_UPDATE.md](docs/release/AUTO_UPDATE.md) for setup and [SIGNING_KEYS_SETUP.md](docs/release/SIGNING_KEYS_SETUP.md) for key configuration.
+
 See [QUICK_RELEASE.md](docs/release/QUICK_RELEASE.md) or [RELEASE.md](docs/release/RELEASE.md).
 
 ## Project Status
 
-**Current Features:** Auth (JWT, email verification, password reset) | Routine management (CRUD, timer, auto-play) | Community (sharing, tags, ratings, search/filters) | Subscriptions (Stripe, Free/Premium) | Statistics (Premium: grades, streaks, charts, leaderboard) | Desktop app (Tauri v2, auto releases)
+**Current Features:** Auth (JWT, email verification, password reset) | Routine management (CRUD, timer, auto-play) | Community (sharing, tags, ratings, search/filters) | Subscriptions (Stripe, Free/Premium) | Statistics (Premium: grades, streaks, charts, leaderboard) | Desktop app (Tauri v2, auto releases, auto-update)
 
 **Planned:** V2 (HTTPS + custom domain) → V3 (React Native mobile) → V4 (advanced analytics, AI coaching)
 

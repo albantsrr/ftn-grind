@@ -7,6 +7,7 @@ pub fn run() {
 
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
+        .plugin(tauri_plugin_updater::Builder::new().build())
         .setup(|app| {
             log::info!("FortiFlow application started");
             log::info!("Connecting to cloud backend at: http://72.61.166.22");

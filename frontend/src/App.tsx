@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import PremiumRoute from './components/PremiumRoute';
+import UpdateNotification from './components/UpdateNotification';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import ForgotPassword from './pages/ForgotPassword';
@@ -21,6 +22,7 @@ function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
+        <UpdateNotification />
         <Routes>
           {/* Public routes */}
           <Route path="/login" element={<Login />} />

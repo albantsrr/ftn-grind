@@ -46,6 +46,35 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         run: npm run tauri build -- --target ${{ matrix.target }}
 
+      - name: Generate update manifest
+        if: matrix.platform == 'windows-latest'
+        working-directory: frontend/src-tauri/target/${{ matrix.target }}/release/bundle
+        run: |
+          # Get the MSI and NSIS files
+          MSI_FILE=$(ls msi/*.msi | head -n 1)
+          NSIS_FILE=$(ls nsis/*.exe 2>/dev/null | head -n 1 || echo "")
+
+          # Get version from tag
+          VERSION="${{ github.ref_name }}"
+          VERSION="${VERSION#v}"
+
+          # Create latest.json manifest
+          cat > latest.json << EOF
+          {
+            "version": "$VERSION",
+            "notes": "See release notes at https://github.com/${{ github.repository }}/releases/tag/${{ github.ref_name }}",
+            "pub_date": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+            "platforms": {
+              "windows-x86_64": {
+                "signature": "$(cat ${MSI_FILE}.sig)",
+                "url": "https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/$(basename $MSI_FILE)"
+              }
+            }
+          }
+          EOF
+
+          cat latest.json
+
       - name: Upload Windows MSI
         if: matrix.platform == 'windows-latest'
         uses: actions/upload-artifact@v4
@@ -70,6 +99,8 @@ jobs:
         with:
           files: |
             frontend/src-tauri/target/${{ matrix.target }}/release/bundle/**/*.msi
+            frontend/src-tauri/target/${{ matrix.target }}/release/bundle/**/*.msi.sig
             frontend/src-tauri/target/${{ matrix.target }}/release/bundle/**/*.exe
+            frontend/src-tauri/target/${{ matrix.target }}/release/bundle/latest.json
           draft: true
           generate_release_notes: true
