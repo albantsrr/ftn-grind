@@ -60,9 +60,12 @@ export default function UpdateNotification() {
             setDownloadProgress(0);
             break;
           case 'Progress':
-            const progress = Math.round((event.data.downloaded / event.data.contentLength) * 100);
-            setDownloadProgress(progress);
-            console.log(`Download progress: ${progress}%`);
+            // event.data contains chunkLength, not downloaded/contentLength
+            // Calculate progress based on chunk received
+            const chunkLength = event.data.chunkLength || 0;
+            // For now, show incremental progress
+            setDownloadProgress((prev) => Math.min(prev + 10, 90));
+            console.log(`Download progress: chunk received ${chunkLength} bytes`);
             break;
           case 'Finished':
             console.log('Download finished');
