@@ -18,7 +18,6 @@ FortiFlow is a desktop training application for Fortnite players. Users create t
 - **MUST use Python 3.10, 3.11, or 3.12** (NOT 3.13 due to dependency incompatibility)
 - Check version: `python --version` or `python3 --version`
 - If wrong version, install correct version and use `python3.12 -m venv venv` (or 3.10/3.11)
-- See [docs/backend/PYTHON_VERSION.md](docs/backend/PYTHON_VERSION.md) for troubleshooting
 
 ## Environment Setup
 
@@ -48,38 +47,39 @@ See [backend/.env.example](backend/.env.example) for template.
 
 ## Development Commands
 
-### Backend
+### Backend (VPS Only - No Local Development)
+
+**⚠️ IMPORTANT:** The backend runs ONLY on the VPS (72.61.166.22). There is no local backend setup for development.
+
+**API Endpoints (VPS):**
+- Main API: `http://72.61.166.22`
+- Interactive docs: `http://72.61.166.22/docs` (Swagger UI)
+- Alternative docs: `http://72.61.166.22/redoc`
+- Health check: `http://72.61.166.22/health`
+
+**Deployment (Maintainers Only):**
+```bash
+cd backend
+./scripts/deploy-backend.sh  # Deploy to VPS via rsync + Docker rebuild
+```
+
+**Database:** PostgreSQL on VPS (Docker container)
+
+**Local Testing (Optional - Backend Development):**
+If you need to test backend changes locally before deploying:
 ```bash
 cd backend
 python --version  # Must be 3.10-3.12 (NOT 3.13)
+python3 -m venv venv && source venv/bin/activate
+pip install -r requirements.txt
+uvicorn main:app --reload --host 127.0.0.1 --port 3000
 
-# Start server (recommended - handles venv setup, deps, and launch)
-./run_backend.sh
-
-# Manual setup (if needed):
-# python3 -m venv venv && source venv/bin/activate  # Windows: venv\Scripts\activate
-# pip install -r requirements.txt
-# uvicorn main:app --reload --host 127.0.0.1 --port 3000
-
-# Tests (activate venv first)
-pytest                    # All tests
-pytest tests/test_*.py   # Specific file
-pytest -v -s             # Verbose with output
-pytest --cov             # With coverage
-
-# Database migrations (after pulling new features)
-python scripts/migrate_add_subscriptions.py  # If subscription schema missing
-python scripts/migrate_add_email_verification.py  # If email verification missing
-python scripts/migrate_add_avatar.py  # If avatar field missing
+# Tests
+pytest                                    # All tests
+pytest tests/test_*.py                   # Specific file
+pytest -v -s                             # Verbose with output
+pytest --cov=. --cov-report=html          # HTML coverage report
 ```
-
-**API Endpoints:**
-- Main API: `http://localhost:3000`
-- Interactive docs: `http://localhost:3000/docs` (Swagger UI)
-- Alternative docs: `http://localhost:3000/redoc`
-- Health check: `http://localhost:3000/health`
-
-**Database:** SQLite file created automatically at `backend/fortiflow.db` on first run
 
 ### Frontend
 ```bash
@@ -99,8 +99,8 @@ npm run tauri:dev    # Dev mode (auto-starts backend)
 npm run tauri:build  # Build executable → src-tauri/target/release/bundle/
 ```
 
-**Note:** The desktop application connects to the cloud backend API (NOT a local embedded backend).
-See [TAURI_SETUP.md](docs/setup/TAURI_SETUP.md) for setup details.
+**Note:** The desktop application connects ONLY to the cloud backend API on VPS (72.61.166.22). There is NO local backend, even in development mode. Internet connection required.
+See [docs/README.md](docs/README.md) for setup details.
 
 ## Architecture
 
@@ -165,9 +165,10 @@ routine_ratings:
 
 **Key API Endpoints:** Auth (login, register, verify, reset password) | Routines (CRUD) | Community (public listing, share) | Tags (categorization) | Ratings (1-5 stars) | Timer (execution) | Subscriptions (Stripe checkout, portal, webhooks) | Statistics (Premium: sessions, charts, grades) | Leaderboard (Premium: global/friends rankings). See `/docs` for interactive API reference.
 
-**Environments:**
-- Dev: `http://localhost:3000` (SQLite, local testing)
-- Prod: `http://72.61.166.22` (PostgreSQL+Docker on VPS)
+**Environment:**
+- **VPS Only:** `http://72.61.166.22` (PostgreSQL+Docker on VPS)
+- Used by both development and production Tauri apps
+- No local backend environment
 
 **Production Deployment:**
 ```bash
@@ -193,7 +194,7 @@ routine_ratings:
 - Config: `/opt/fortiflow/backend/docker-compose.yml`
 - Logs: `docker compose logs backend` (from VPS)
 
-See [docs/backend/DEPLOYMENT.md](docs/backend/DEPLOYMENT.md) for full deployment guide.
+See [docs/Utils.md](docs/Utils.md) for full deployment guide.
 
 ### Frontend (React + TypeScript)
 
@@ -240,17 +241,14 @@ See [ENVIRONMENTS.md](frontend/ENVIRONMENTS.md).
 
 ### Tauri Desktop Integration
 
-**Critical Architecture Detail:** The Tauri desktop application connects to the cloud backend API (NO local backend).
+**Critical Architecture Detail:** The Tauri desktop application connects ONLY to the cloud backend API on VPS (NO local backend, even in dev).
 
-**Production Architecture:**
+**Architecture:**
 - Tauri app is a lightweight desktop wrapper around the React frontend
-- All API calls go to `http://72.61.166.22` (VPS backend)
+- **All API calls go to `http://72.61.166.22` (VPS backend)** - both dev and prod
 - No embedded Python or local backend process
 - Requires internet connection to function
-
-**Development vs Production:**
-- Dev (`npm run tauri:dev`): Frontend connects to `http://localhost:3000` (local backend for testing)
-- Prod (`npm run tauri:build`): Frontend connects to `http://72.61.166.22` (VPS backend)
+- No difference between dev and prod regarding backend URL
 
 **Config:** `tauri.conf.json` (window/bundle), `Cargo.toml` (deps), `.env.production` (API URL)
 
@@ -258,9 +256,11 @@ See [ENVIRONMENTS.md](frontend/ENVIRONMENTS.md).
 
 **Authentication:** JWT tokens stored in localStorage (key: `fortiflow_token`). All API calls except login/register require `Authorization: Bearer <token>` header.
 
-**Field Naming:** Database uses French names (nom, duree, code_map, tips) - maintain consistency when adding fields
+**Field Naming Convention:**
+- **Backend/Database**: Uses French field names (nom, duree, code_map, tips) - maintain consistency when adding fields
+- **Frontend**: React components, variables, and all UI text use English
 
-**Testing:** pytest + pytest-asyncio. Tests use FastAPI TestClient with httpx for async.
+**Testing:** pytest + pytest-asyncio + pytest-cov. Tests use FastAPI TestClient with httpx for async. Coverage reports generated in `htmlcov/` directory.
 
 **TypeScript:** `verbatimModuleSyntax` enabled - use `import type` for React types (ReactNode, FormEvent, etc).
 
@@ -270,7 +270,12 @@ See [ENVIRONMENTS.md](frontend/ENVIRONMENTS.md).
 
 **Step Ordering:** `order` field (int) determines execution sequence, set automatically on creation.
 
-**Configuration:** All config centralized in `backend/config.py` (env vars, limits, defaults). See [docs/backend/SUBSCRIPTIONS-COMPREHENSIVE.md](docs/backend/SUBSCRIPTIONS-COMPREHENSIVE.md) for details.
+**Configuration:** All config centralized in `backend/config.py` (env vars, limits, defaults). See [docs/Utils.md](docs/Utils.md) for technical details.
+
+**Code Style:**
+- Backend: Follow PEP 8 conventions, use type hints where appropriate
+- Frontend: ESLint configured with React hooks rules, use functional components with hooks
+- Imports: Group and order by external packages → internal modules → relative imports
 
 **Subscription Tiers:**
 - **Free:** 2 routines max, no community/statistics
@@ -280,13 +285,13 @@ See [ENVIRONMENTS.md](frontend/ENVIRONMENTS.md).
 - Backend: `require_premium` dependency on protected routes
 - Frontend: `<PremiumRoute>` wrapper or check `user.subscription_tier === 'premium'`
 
-**Community:** Public routine sharing, tags (8 defaults), 5-star ratings, search/filters, pagination. See [docs/guides/COMMUNITY-COMPREHENSIVE.md](docs/guides/COMMUNITY-COMPREHENSIVE.md).
+**Community:** Public routine sharing, tags (8 defaults), 5-star ratings, search/filters, pagination.
 
 **Statistics:** Session tracking → grade levels (Bronze→Legend) based on completed routines + streak + time. Streaks break after 2+ days inactive. Leaderboard scoring: `routines*10 + streak*5 + time_hours*2`.
 
 **Email:** SendGrid (prod) / console (dev). Verification + password reset flows. Templates in `backend/email_utils.py`.
 
-**Stripe:** Checkout → webhooks → subscription sync. Portal for management. Test card: `4242 4242 4242 4242`. See [docs/backend/SUBSCRIPTIONS-COMPREHENSIVE.md](docs/backend/SUBSCRIPTIONS-COMPREHENSIVE.md).
+**Stripe:** Checkout → webhooks → subscription sync. Portal for management. Test card: `4242 4242 4242 4242`. See [docs/Utils.md](docs/Utils.md) for implementation details.
 
 **Migrations:** After pulling new features, check `backend/scripts/` for migration scripts. Run them to update your local database schema:
 - `migrate_add_subscriptions.py` - Adds subscription tables and user fields
@@ -304,9 +309,7 @@ See [ENVIRONMENTS.md](frontend/ENVIRONMENTS.md).
 
 **Formats:** Windows (MSI+EXE) only (Linux/macOS builds disabled)
 
-**Auto-Update:** Tauri updater plugin integrated. Users get automatic update notifications when new releases are published. See [AUTO_UPDATE.md](docs/release/AUTO_UPDATE.md) for setup and [SIGNING_KEYS_SETUP.md](docs/release/SIGNING_KEYS_SETUP.md) for key configuration.
-
-See [QUICK_RELEASE.md](docs/release/QUICK_RELEASE.md) or [RELEASE.md](docs/release/RELEASE.md).
+**Auto-Update:** Tauri updater plugin integrated. Users get automatic update notifications when new releases are published. See [docs/Utils.md](docs/Utils.md) for complete setup and release process.
 
 ## Project Status
 
@@ -316,24 +319,29 @@ See [QUICK_RELEASE.md](docs/release/QUICK_RELEASE.md) or [RELEASE.md](docs/relea
 
 ## Testing
 
-**Test Framework:** pytest with pytest-asyncio for async support. Tests use FastAPI TestClient with httpx.
+**Test Framework:** pytest with pytest-asyncio for async support, pytest-cov for coverage reports. Tests use FastAPI TestClient with httpx.
 
 **Running Tests:**
 ```bash
 cd backend
-pytest                    # All tests
-pytest tests/test_*.py   # Specific file
-pytest -v -s             # Verbose with output
-pytest --cov             # With coverage
+source venv/bin/activate  # Activate venv first
+
+pytest                                    # All tests
+pytest tests/test_*.py                   # Specific file
+pytest -v -s                             # Verbose with output
+pytest --cov=. --cov-report=html         # HTML coverage report (opens htmlcov/index.html)
+pytest --cov=. --cov-report=term-missing # Terminal coverage with missing lines
 ```
 
-**Test Docs:** See [docs/guides/TESTING_GUIDE.md](docs/guides/TESTING_GUIDE.md) for procedures. Community test plan in [docs/guides/COMMUNITY-COMPREHENSIVE.md](docs/guides/COMMUNITY-COMPREHENSIVE.md).
+**Test Docs:** All testing procedures documented in [docs/README.md](docs/README.md) and [docs/Utils.md](docs/Utils.md).
 
 **Testing Notes:**
+- Always activate venv before running tests: `source venv/bin/activate`
 - Restart backend after schema changes: `./run_backend.sh`
 - Run migrations after pulling new features (see "Migrations" section above)
 - Stripe test card: `4242 4242 4242 4242` (any future date, any CVC)
 - Use `pytest -v -s` to see detailed output and print statements during debugging
+- Coverage reports: HTML version in `htmlcov/`, open `htmlcov/index.html` in browser
 
 ## Common Issues & Troubleshooting
 
@@ -361,3 +369,44 @@ pytest --cov             # With coverage
 - Check VPS services: `ssh root@72.61.166.22 "cd /opt/fortiflow/backend && docker compose ps"`
 - View backend logs: `ssh root@72.61.166.22 "cd /opt/fortiflow/backend && docker compose logs -f backend"`
 - Health check: `curl http://72.61.166.22/health`
+
+## Documentation Structure
+
+All documentation is centralized in the `docs/` directory with the following organization:
+
+**Main Documentation:**
+- `docs/README.md` - Project overview and main documentation index
+
+**Files:**
+- `docs/README.md` - Main project documentation and quick start
+- `docs/Utils.md` - Detailed technical guide explaining infrastructure and technologies
+- `docs/Update.md` - Change log for current session modifications
+
+
+## Documentation Creation Guidelines
+
+Single location:
+All documentation must be centralized in the docs/ directory.
+No other documentation folders should be created anywhere else in the project.
+
+Allowed files:
+Only three files are permitted in this directory:
+
+README.md – the main file introducing the project.
+→ Update it only when necessary (e.g., new feature, major change, etc.).
+
+Utils.md – a detailed and educational document.
+→ Focus primarily on clear explanations and pedagogy, not large code blocks.
+→ When referring to implementation details, mention the relevant file path or reference instead of pasting long sections of code.
+→ The goal is to describe how the infrastructure works, the technologies used, and the technical logic — so the document can serve as training or internal learning material.
+
+Update.md – the change log.
+→ Describe precisely all modifications made during the current session (additions, deletions, refactorings, fixes, etc.).
+
+Best practices:
+
+Do not create any other documentation files.
+
+Write explanations in a clear, instructional, and comprehensive style.
+
+Each file must be self-contained and understandable without reading the others.

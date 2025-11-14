@@ -118,10 +118,10 @@ cd backend
 python -m venv venv
 source venv/bin/activate  # ou venv\Scripts\activate sous Windows
 pip install -r requirements.txt
-uvicorn main:app --reload
+uvicorn main:app --reload --host 127.0.0.1 --port 3000
 ```
 
-Backend : `http://localhost:8000`
+Backend : `http://localhost:3000`
 
 ### 3️⃣ Lancer le frontend (React)
 ```bash
