@@ -60,8 +60,16 @@ jobs:
           # Get current UTC time
           $PUB_DATE = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")
 
+          # Find the signature file (search in msi directory and parent directories)
+          $SIG_FILE = Get-ChildItem -Path "." -Recurse -Filter "*.msi.sig" | Where-Object { $_.Name -eq "$($MSI_FILE.Name).sig" } | Select-Object -First 1
+
+          if (-not $SIG_FILE) {
+            Write-Error "Signature file not found for $($MSI_FILE.Name)"
+            exit 1
+          }
+
           # Read signature
-          $SIGNATURE = Get-Content -Path "$($MSI_FILE.FullName).sig" -Raw
+          $SIGNATURE = Get-Content -Path $SIG_FILE.FullName -Raw
 
           # Create latest.json manifest
           $manifest = @{
