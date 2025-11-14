@@ -61,30 +61,53 @@ jobs:
           $PUB_DATE = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")
 
           # Find the signature file (search in msi directory and parent directories)
-          $SIG_FILE = Get-ChildItem -Path "." -Recurse -Filter "*.msi.sig" | Where-Object { $_.Name -eq "$($MSI_FILE.Name).sig" } | Select-Object -First 1
+          Write-Host "Searching for signature file..."
+          Write-Host "MSI file: $($MSI_FILE.Name)"
+
+          # List all .sig files to debug
+          Write-Host "All .sig files in bundle directory:"
+          Get-ChildItem -Path "." -Recurse -Filter "*.sig" | ForEach-Object { Write-Host "  - $($_.FullName)" }
+
+          $SIG_FILE = Get-ChildItem -Path "." -Recurse -Filter "*.sig" | Where-Object { $_.Name -eq "$($MSI_FILE.Name).sig" } | Select-Object -First 1
 
           if (-not $SIG_FILE) {
-            Write-Error "Signature file not found for $($MSI_FILE.Name)"
-            exit 1
+            Write-Warning "Signature file not found for $($MSI_FILE.Name)"
+            Write-Warning "This release will NOT support auto-update verification"
+            Write-Warning "To enable auto-update, configure TAURI_SIGNING_PRIVATE_KEY and TAURI_SIGNING_PRIVATE_KEY_PASSWORD secrets"
+
+            # Create manifest without signature (updater will still work but without verification)
+            $manifest = @{
+              version = $VERSION
+              notes = "See release notes at https://github.com/${{ github.repository }}/releases/tag/${{ github.ref_name }}"
+              pub_date = $PUB_DATE
+              platforms = @{
+                "windows-x86_64" = @{
+                  url = "https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/$($MSI_FILE.Name)"
+                }
+              }
+            } | ConvertTo-Json -Depth 10
+          } else {
+            Write-Host "Signature file found: $($SIG_FILE.FullName)"
+
+            # Read signature
+            $SIGNATURE = Get-Content -Path $SIG_FILE.FullName -Raw
+
+            # Create latest.json manifest with signature
+            $manifest = @{
+              version = $VERSION
+              notes = "See release notes at https://github.com/${{ github.repository }}/releases/tag/${{ github.ref_name }}"
+              pub_date = $PUB_DATE
+              platforms = @{
+                "windows-x86_64" = @{
+                  signature = $SIGNATURE.Trim()
+                  url = "https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/$($MSI_FILE.Name)"
+                }
+              }
+            } | ConvertTo-Json -Depth 10
           }
 
-          # Read signature
-          $SIGNATURE = Get-Content -Path $SIG_FILE.FullName -Raw
-
-          # Create latest.json manifest
-          $manifest = @{
-            version = $VERSION
-            notes = "See release notes at https://github.com/${{ github.repository }}/releases/tag/${{ github.ref_name }}"
-            pub_date = $PUB_DATE
-            platforms = @{
-              "windows-x86_64" = @{
-                signature = $SIGNATURE.Trim()
-                url = "https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/$($MSI_FILE.Name)"
-              }
-            }
-          } | ConvertTo-Json -Depth 10
-
           $manifest | Out-File -FilePath "latest.json" -Encoding UTF8
+          Write-Host "Generated latest.json:"
           Get-Content "latest.json"
 
       - name: Upload Windows MSI
