@@ -1,6 +1,20 @@
-# CLAUDE.md
+# AGENTS.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to AI agents (Claude, GPT, etc.) when working with code in this repository.
+
+## 📚 Documentation Structure
+
+**⚠️ IMPORTANT: Official Documentation Files**
+
+This project maintains **ONLY 3 official documentation files** located in the `docs/` folder:
+
+1. **`docs/AGENTS.md`** (this file) - AI agents guidance, project architecture, and development guidelines
+2. **`docs/README.md`** - Main project documentation, setup instructions, and API reference
+3. **`docs/Utils.md`** - Utility commands, scripts, deployment procedures, and troubleshooting
+
+**All other `.md` files in the project should be removed or ignored.** These 3 files are the single source of truth for project documentation.
+
+---
 
 ## Project Overview
 
@@ -389,16 +403,20 @@ Single location:
 All documentation must be centralized in the docs/ directory.
 No other documentation folders should be created anywhere else in the project.
 
-Allowed files:
+**Allowed files:**
 Only three files are permitted in this directory:
 
 README.md – the main file introducing the project.
 → Update it only when necessary (e.g., new feature, major change, etc.).
 
-Utils.md – a detailed and educational document.
+Utils.md – a detailed and educational document serving as a pedagogical guide.
+→ **IMPORTANT: This file MUST be written ENTIRELY IN FRENCH** (unlike all other project documentation which is in English).
 → Focus primarily on clear explanations and pedagogy, not large code blocks.
 → When referring to implementation details, mention the relevant file path or reference instead of pasting long sections of code.
 → The goal is to describe how the infrastructure works, the technologies used, and the technical logic — so the document can serve as training or internal learning material.
+→ **Structure: Organize content by logical chapters** (e.g., "Chapitre 1: Architecture Backend", "Chapitre 2: Système d'Authentification", etc.)
+→ Each chapter should provide a pedagogical description of key modules and concepts in the project.
+→ Think of this as a "guiding thread" document that helps understand the project's core components step by step.
 
 Update.md – the change log.
 → Describe precisely all modifications made during the current session (additions, deletions, refactorings, fixes, etc.).
